@@ -1,6 +1,10 @@
 function SignIn() {
   return (
     <div>
+      <div className="head">
+        <img src="/img/taxpal1.png" alt="taxpal" className="logo"/>
+        <p className="para">Your trusted tax partner</p>
+      </div>
       <form>
         <h2>Sign in</h2>
         <p>Please enter your details to sign in.</p>

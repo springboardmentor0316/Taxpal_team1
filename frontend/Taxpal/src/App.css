@@ -1,12 +1,36 @@
 body {
   font-family: Arial;
-  background-color: #f4f6f8;
+  background: linear-gradient(180deg, #f1f3f6 0%, #b5cbe4 100%);
   display: flex;
   justify-content: flex-end;
   height: 100vh;
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
+}
+.head {
+  position: fixed;
+  top: 55%;
+  left: 32%;
+  transform: translate(-50%, -50%);
+  z-index: 5; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  margin-top: -45%;
+  width: 900px;     
+  height: auto;
+  opacity: 0.95;   
+
+}
+.head .para{
+  margin-top: -47%;
+  font-size: 2rem;
+  margin-right: -14%;
+  color: #333;
 }
 div {
   justify-content: center;
@@ -15,8 +39,9 @@ div {
 form {
   background-color: #fff;
   padding: 30px;
+  margin-right: 40px;
   border-radius: 40px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 10px 10px 5px rgba(170, 168, 168, 0.5);
   width: 420px;
   height: 425px;
 }
@@ -49,7 +74,11 @@ input[type="password"] {
   background-color: white;
 }
 input[type="checkbox"] {
+  margin-top: -5%;
   margin-right: 5px;
+  margin-left: -9%;
+  width: 100px;
+  height: 20px;
   accent-color: black;
   background-color: white;
 }
