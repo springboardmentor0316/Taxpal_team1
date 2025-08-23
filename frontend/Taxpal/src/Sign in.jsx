@@ -2,7 +2,7 @@ function SignIn() {
   return (
     <div>
       <div className="head">
-        <img src="/img/taxpal1.png" alt="taxpal" className="logo"/>
+        <img src="/img/taxpal1.png" alt="taxpal" className="logo" />
         <p className="para">Your trusted tax partner</p>
       </div>
       <form>
@@ -13,16 +13,22 @@ function SignIn() {
           <input type="Text" placeholder="Username" required />
         </div>
         <div>
-        <label>Password:</label>
-          <input type="password" placeholder="Password" required/>
-           <div>
-          <input type="checkbox" />
-          <label>Remember me</label>
+          <label>Password:</label>
+          <input type="password" placeholder="Password" required />
+          <div className="inline">
+          <div className="space">
+            <input type="checkbox" />
+            <label>Remember me</label>
+          </div>
+          <a id="f" href="#">
+            Forgot password?
+          </a>
         </div>
-        <a id="f"href="#">Forgot password?</a>
         </div>
         <button type="submit">Sign in</button>
-        <p>Don't have an account? <a href="#">Sign up</a></p>
+        <p>
+          Don't have an account? <a href="#">Sign up</a>
+        </p>
       </form>
     </div>
   );
