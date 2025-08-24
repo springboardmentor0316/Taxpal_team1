@@ -54,7 +54,7 @@ input[type="checkbox"] {
   background-color: white;
 }
 input::placeholder {
-  color: white;
+  color: black;
   opacity: 1;
 }
 a:hover {
@@ -88,4 +88,6 @@ button:hover {
   text-decoration: underline; 
 }
 
-
+label{
+  color:black;
+}
