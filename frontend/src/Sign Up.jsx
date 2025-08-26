@@ -16,7 +16,7 @@ function SignUp() {
 
       <div className="form-container">
         <h2
-          style={{ marginBottom: "-10%", textAlign: "center", color: "#333" }}
+          style={{ marginBottom: "-9%", textAlign: "center", color: "#333", marginLeft: "-15%", }}
         >
           Sign Up
         </h2>
@@ -24,11 +24,11 @@ function SignUp() {
           style={{
             backgroundColor: "white",
             padding: "34px",
-            marginRight: "40px",
+            marginRight: "98px",
             borderRadius: "40px",
             boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
-            width: "490px",
-            height: "600px",
+            width: "420px",
+          height: "565px",
           }}
         >
           <p
@@ -37,6 +37,7 @@ function SignUp() {
               color: "#555",
               marginBottom: "15px",
               textAlign: "center",
+              marginTop: "20px",
             }}
           >
             Please enter your to create account.
@@ -46,6 +47,7 @@ function SignUp() {
               style={{
                 display: "block",
                 marginBottom: "5px",
+                marginTop: "-18px",
                 letterSpacing: "1.3px",
                 fontSize: "16px",
                 color: "#333",
@@ -62,8 +64,9 @@ function SignUp() {
           </div>
 
           <div className="form-group">
-            <label>Full Name</label>
-            <input type="text" placeholder="Full Name" required />
+            <label>Confirm Password</label>
+            <input type="text" placeholder="Confirm Password" required />
+            
           </div>
 
           <div className="form-group">
@@ -86,10 +89,9 @@ function SignUp() {
               defaultValue=""
               required
               style={{
-                width: "103%",
+                width: "100%",
                 padding: "11px",
                 borderRadius: "15px",
-               
                 border: "1px solid #07070",
                 fontSize: " 14px",
                 color: "black",
@@ -137,7 +139,7 @@ function SignUp() {
               defaultValue=""
               required
               style={{
-                width: "103%",
+                width: "100%",
                 padding: "12px",
                 marginBottom: "15px",
                 borderRadius: "15px",
@@ -172,7 +174,7 @@ function SignUp() {
 
           <button
             style={{
-              width: "105%",
+              width: "100%",
               padding: "10px",
               backgroundColor: "#207ED0",
               border: "none",
@@ -185,7 +187,10 @@ function SignUp() {
           >
             Sign Up
           </button>
-          <p>
+          <p style={{
+            marginTop: "8px",
+            textAlign: "center",
+          }}>
             Already have an account?{" "}
             <Link to="/" className="auth-link">
               Sign In

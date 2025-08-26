@@ -29,15 +29,20 @@ function ResetPassword() {
         style={{
           backgroundColor: "white",
           padding: "30px",
-          marginRight: "40px",
+          marginRight: "98px",
           borderRadius: "40px",
           boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
           width: "420px",
-          height: "400px",
+          height: "425px",
         }}
       >
         <h2
-          style={{ marginBottom: "15px", textAlign: "center", color: "#333" }}
+          style={{ 
+            marginBottom: "14px", 
+            textAlign: "left", 
+            color: "#333",
+            marginTop: "95px",
+          }}
         >
           Reset your Password
         </h2>
@@ -45,12 +50,14 @@ function ResetPassword() {
         <p
           style={{
             fontSize: "14px",
+            marginTop: "5px",
             color: "#555",
-            marginBottom: "20px",
-            textAlign: "center",
+            marginBottom: "1px",
+            marginTop: "-14px",
+            textAlign: "left",
           }}
         >
-          Enter the email address associated with your account and we’ll send
+          Enter the email address associated with <br /> your account and we’ll send
           you a reset link.
         </p>
 
@@ -59,14 +66,15 @@ function ResetPassword() {
           <label
             htmlFor="email"
             style={{
-              display: "block",
+             display: "block",
+              marginTop: "2px",
               marginBottom: "5px",
-              letterSpacing: "1.3px",
+              marginLeft:"2px",
               fontSize: "16px",
               color: "#333",
             }}
           >
-            E-Mail Address
+            E-mail Address
           </label>
           <input
             id="email"
@@ -76,9 +84,9 @@ function ResetPassword() {
             onChange={(e) => setEmail(e.target.value)}
             required
             style={{
-              width: "100%",
+              width: "95%",
               padding: "10px",
-              borderRadius: "8px",
+              borderRadius: "14px",
               border: "1px solid #ccc",
             }}
           />
@@ -86,7 +94,7 @@ function ResetPassword() {
 
         <button
           style={{
-            width: "105%",
+             width: "100%",
             padding: "10px",
             backgroundColor: "#207ED0",
             border: "none",
@@ -102,14 +110,14 @@ function ResetPassword() {
             </Link>
         </button>
 
-        <p style={{ color: "#333", textAlign: "center", marginTop: "15px" }}>
+        <p style={{ color: "#333", textAlign: "center", marginTop: "10px", fontSize: "15px",}}>
           Back to{" "}
           <Link to="/signin" className="auth-link">
             Sign In
           </Link>
         </p>
 
-        <p style={{ color: "#333", textAlign: "center", marginTop: "10px" }}>
+        <p style={{ color: "#333", textAlign: "center", marginTop: "60px" }}>
           Don’t have an account?{" "}
           <Link to="/signup" className="auth-link">
             Sign Up

@@ -17,7 +17,7 @@ function SignIn() {
         style={{
           backgroundColor: "white",
           padding: "30px",
-          marginRight: "40px",
+          marginRight: "98px",
           borderRadius: "40px",
           boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
           width: "420px",
@@ -25,7 +25,7 @@ function SignIn() {
         }}
       >
         <h2
-          style={{ marginBottom: "15px", textAlign: "center", color: "#333" }}
+          style={{ marginBottom: "15px", textAlign: "center", color: "#333", marginTop: "20px", }}
         >
           Sign in
         </h2>
@@ -43,6 +43,7 @@ function SignIn() {
           <label
             style={{
               display: "block",
+              marginTop: "2px",
               marginBottom: "5px",
               letterSpacing: "1.3px",
               fontSize: "16px",
@@ -66,6 +67,7 @@ function SignIn() {
                 color: "#207ED0",
                 fontSize: "16px",
                 textDecoration: "none",
+                marginLeft: "23%",
               }}
               id="f"
               href="/verify-email"
@@ -76,7 +78,7 @@ function SignIn() {
         </div>
         <button
           style={{
-            width: "105%",
+            width: "100%",
             padding: "10px",
             backgroundColor: "#207ED0",
             border: "none",
@@ -89,7 +91,10 @@ function SignIn() {
         >
           Sign In
         </button>
-        <p>
+        <p style={{
+          textAlign:"center",
+          marginTop: "3px",
+        }}>
           Don't have an account?{" "}
           <Link to="/signup" className="auth-link">
             Sign up

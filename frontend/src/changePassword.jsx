@@ -22,11 +22,11 @@ function ChangePassword() {
         style={{
           backgroundColor: "white",
           padding: "30px",
-          marginRight: "40px",
+          marginRight: "98px",
           borderRadius: "40px",
           boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
           width: "420px",
-          height: "460px",
+          height: "425px",
         }}
       >
         <h2
@@ -52,7 +52,7 @@ function ChangePassword() {
             style={{
               display: "block",
               marginBottom: "5px",
-              letterSpacing: "1.3px",
+              
               fontSize: "16px",
               color: "#333",
             }}
@@ -67,7 +67,7 @@ function ChangePassword() {
               style={{
                 flex: 1,
                 padding: "8px 35px 8px 8px",
-                borderRadius: "8px",
+                borderRadius: "14px",
                 border: "1px solid #ccc",
               }}
             />
@@ -91,7 +91,7 @@ function ChangePassword() {
             style={{
               display: "block",
               marginBottom: "5px",
-              letterSpacing: "1.3px",
+              
               fontSize: "16px",
               color: "#333",
             }}
@@ -106,7 +106,7 @@ function ChangePassword() {
               style={{
                 flex: 1,
                 padding: "8px 35px 8px 8px", 
-                borderRadius: "8px",
+                borderRadius: "14px",
                 border: "1px solid #ccc",
               }}
             />

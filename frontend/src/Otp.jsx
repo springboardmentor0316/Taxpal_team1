@@ -41,17 +41,17 @@ function OtpInput() {
 
       <form
         style={{
+
           backgroundColor: "white",
           padding: "30px",
-          marginRight: "40px",
+          marginRight: "98px",
           borderRadius: "40px",
           boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
           width: "420px",
-          height: "460px",
-           textAlign: "center"
+          height: "425px",
         }}
       >
-          <h3 style={{ marginBottom: "20px",  textAlign: "center",color: "#333" }}>Enter Your OTP</h3>
+          <h3 style={{ marginBottom: "20px",  textAlign: "center",color: "#333", marginTop: "90px", }}>Enter Your OTP</h3>
            <p
           style={{
             fontSize: "14px",
@@ -73,11 +73,12 @@ function OtpInput() {
                 onChange={(e) => handleChange(e.target, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 style={{
-                  width: "40px",
-                  height: "40px",
+                  width: "30px",
+                  marginTop: "15px",
+                  height: "30px",
                   textAlign: "center",
                   fontSize: "18px",
-                  borderRadius: "8px",
+                  borderRadius: "14px",
                   border: "1px solid #ccc",
                 }}
               />
@@ -87,20 +88,21 @@ function OtpInput() {
           <button
             type="submit"
             style={{
-              width: "100%",
-              padding: "10px",
-              backgroundColor: "#207ED0",
-              border: "none",
-              color: "white",
-              borderRadius: "10px",
-              fontSize: "16px",
-              cursor: "pointer",
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#207ED0",
+            border: "none",
+            color: "white",
+            borderRadius: "14px",
+            fontSize: "16px",
+            cursor: "pointer",
+            marginTop: "-5%",
             }}
           >
             Verify
           </button>
 
-          <p style={{ marginTop: "15px",  textAlign: "center",fontSize: "13px", color: "#555" }}>
+          <p style={{ marginTop: "90px",  textAlign: "center",fontSize: "15px", color: "#555" }}>
             Didn’t receive an OTP?{" "}
             <span style={{ color: "#207ED0", cursor: "pointer" }}>Resend</span>
           </p>
