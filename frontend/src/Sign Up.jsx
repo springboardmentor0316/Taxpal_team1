@@ -1,6 +1,97 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from './config';
 
 function SignUp() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [country, setCountry] = useState("");
+  const [income, setIncome] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    
+    if (!country) {
+      toast.error("Please select your country");
+      return;
+    }
+    
+    if (!income) {
+      toast.error("Please select your income bracket");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      console.log("Submitting data:", { name, email, password, country, income });
+      
+      const res = await axios.post(`${API_BASE_URL}/auth/register`, {
+        name,
+        email,
+        password,
+        country,
+        income
+      });
+      
+      console.log("Registration response:", res.data);
+      
+      if (res.data.success !== false) {
+        toast.success(res.data.message || "Registration successful! Please verify your email.");
+        
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setCountry("");
+        setIncome("");
+        
+        if (res.data.emailPreview) {
+          
+          toast.info(
+            <div>
+              <p>Test email sent! Click to view:</p>
+              <a 
+                href={res.data.emailPreview} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{color: 'white', textDecoration: 'underline'}}
+              >
+                View OTP Email
+              </a>
+            </div>,
+            { autoClose: false }
+          );
+        }
+        
+        let redirectUrl = `/verify-email?email=${encodeURIComponent(email)}`;
+        if (res.data.testOtp) {
+          redirectUrl += `&testOtp=${res.data.testOtp}`;
+          console.log('Using test OTP for development:', res.data.testOtp);
+        }
+        
+        navigate(redirectUrl);
+      } else {
+        toast.error(res.data.message || "Registration failed");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      toast.error(err.response?.data?.message || "Registration failed");
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -16,11 +107,12 @@ function SignUp() {
 
       <div className="form-container">
         <h2
-          style={{ marginBottom: "-9%", textAlign: "center", color: "#333", marginLeft: "-15%", }}
+          style={{ marginBottom: "-9%", textAlign: "center", color: "#333", marginLeft: "-15%" }}
         >
           Sign Up
         </h2>
         <form
+          onSubmit={handleSubmit}
           style={{
             backgroundColor: "white",
             padding: "34px",
@@ -28,7 +120,7 @@ function SignUp() {
             borderRadius: "40px",
             boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
             width: "420px",
-          height: "565px",
+            height: "565px",
           }}
         >
           <p
@@ -55,23 +147,38 @@ function SignUp() {
             >
               Username
             </label>
-            <input type="text" placeholder="Username" required />
+            <input type="text" placeholder="Username" required value={name} onChange={e => setName(e.target.value)} />
           </div>
 
           <div className="form-group">
-            <label>Password</label>
-            <input type="password" placeholder="Password" required />
+            <label style={{ fontSize: "16px", color: "#333333", marginBottom: "5px", display: "block" }}>Password</label>
+            <input type="password" placeholder="Password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
 
           <div className="form-group">
-            <label>Confirm Password</label>
-            <input type="text" placeholder="Confirm Password" required />
-            
+            <label style={{ fontSize: "16px", color: "#333333", marginBottom: "5px", display: "block" }}>Confirm Password</label>
+            <input type="password" placeholder="Confirm Password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
           </div>
 
           <div className="form-group">
-            <label>Email</label>
-            <input type="text" placeholder="Email" required />
+            <label style={{ fontSize: "16px", color: "#333333", marginBottom: "5px", display: "block" }}>Email</label>
+            <input
+              type="email"
+              placeholder="Email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{
+                width: "95%",
+                padding: "10px",
+                marginBottom: "13px",
+                borderRadius: "14px",
+                border: "1px solid #070707",
+                fontSize: "14px",
+                color: "black",
+                backgroundColor: "white"
+              }}
+            />
           </div>
 
           <div className="form-group">
@@ -86,7 +193,8 @@ function SignUp() {
               Select Your Country
             </label>
             <select
-              defaultValue=""
+              value={country}
+              onChange={e => setCountry(e.target.value)}
               required
               style={{
                 width: "100%",
@@ -128,7 +236,6 @@ function SignUp() {
                 display: "block",
                 marginBottom: "9px",
                 marginTop: "13px",
-                
                 fontSize: "16px",
                 color: "#333",
               }}
@@ -136,7 +243,8 @@ function SignUp() {
               Select your Income Bracket
             </label>
             <select
-              defaultValue=""
+              value={income}
+              onChange={e => setIncome(e.target.value)}
               required
               style={{
                 width: "100%",
@@ -176,16 +284,17 @@ function SignUp() {
             style={{
               width: "100%",
               padding: "10px",
-              backgroundColor: "#207ED0",
+              backgroundColor: loading ? "#6ca2d9" : "#207ED0",
               border: "none",
               color: "white",
               borderRadius: "14px",
               fontSize: "16px",
-              cursor: "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
             }}
             type="submit"
+            disabled={loading}
           >
-            Sign Up
+            {loading ? "Processing..." : "Sign Up"}
           </button>
           <p style={{
             marginTop: "8px",

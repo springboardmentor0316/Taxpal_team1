@@ -1,15 +1,17 @@
+
 import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 function OtpInput() {
-  const [otp, setOtp] = useState(new Array(4).fill(""));
+  const [otp, setOtp] = useState(new Array(6).fill(""));
+  const [email, setEmail] = useState("");
 
   const handleChange = (element, index) => {
-    if (isNaN(element.value)) return; // allow only numbers
+    if (isNaN(element.value)) return; 
     let newOtp = [...otp];
     newOtp[index] = element.value;
     setOtp(newOtp);
-
-    // auto move to next
     if (element.nextSibling && element.value !== "") {
       element.nextSibling.focus();
     }
@@ -21,9 +23,17 @@ function OtpInput() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Entered OTP: " + otp.join(""));
+    try {
+      const res = await axios.post("http://localhost:3000/api/auth/verify-otp", {
+        email,
+        otp: otp.join("")
+      });
+      toast.success(res.data.message || "OTP verified!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "OTP verification failed");
+    }
   };
 
   return (
@@ -40,8 +50,8 @@ function OtpInput() {
       </div>
 
       <form
+        onSubmit={handleSubmit}
         style={{
-
           backgroundColor: "white",
           padding: "30px",
           marginRight: "98px",
@@ -63,31 +73,30 @@ function OtpInput() {
           Please enter your OTP.
         </p>
 
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "20px" }}>
-            {otp.map((data, index) => (
-              <input
-                key={index}
-                type="text"
-                maxLength="1"
-                value={data}
-                onChange={(e) => handleChange(e.target, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                style={{
-                  width: "30px",
-                  marginTop: "15px",
-                  height: "30px",
-                  textAlign: "center",
-                  fontSize: "18px",
-                  borderRadius: "14px",
-                  border: "1px solid #ccc",
-                }}
-              />
-            ))}
-          </div>
-
-          <button
-            type="submit"
-            style={{
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "20px" }}>
+          {otp.map((data, index) => (
+            <input
+              key={index}
+              type="text"
+              maxLength="1"
+              value={data}
+              onChange={(e) => handleChange(e.target, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              style={{
+                width: "30px",
+                marginTop: "15px",
+                height: "30px",
+                textAlign: "center",
+                fontSize: "18px",
+                borderRadius: "14px",
+                border: "1px solid #ccc",
+              }}
+            />
+          ))}
+        </div>
+        <button
+          type="submit"
+          style={{
             width: "100%",
             padding: "10px",
             backgroundColor: "#207ED0",
@@ -97,10 +106,10 @@ function OtpInput() {
             fontSize: "16px",
             cursor: "pointer",
             marginTop: "-5%",
-            }}
-          >
-            Verify
-          </button>
+          }}
+        >
+          Submit
+        </button>
 
           <p style={{ marginTop: "90px",  textAlign: "center",fontSize: "15px", color: "#555" }}>
             Didn’t receive an OTP?{" "}

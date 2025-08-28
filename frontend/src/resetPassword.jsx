@@ -1,12 +1,20 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 function ResetPassword() {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Reset link will be sent to: ${email}`);
+    try {
+      const res = await axios.post("http://localhost:3000/api/auth/send-reset-otp", { email });
+      toast.success(res.data.message || "OTP sent to your email");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send OTP");
+    }
   };
 
   return (
@@ -17,13 +25,11 @@ function ResetPassword() {
         alignItems: "center",
       }}
     >
-      {/* Left Logo/Brand */}
       <div className="head">
         <img src="/img/taxpal1.png" alt="taxpal" className="logo" />
         <p className="para">Your trusted tax partner</p>
       </div>
 
-      {/* Right Card */}
       <form
         onSubmit={handleSubmit}
         style={{
@@ -61,7 +67,6 @@ function ResetPassword() {
           you a reset link.
         </p>
 
-        {/* Email Input */}
         <div style={{ marginBottom: "20px" }}>
           <label
             htmlFor="email"
@@ -94,7 +99,7 @@ function ResetPassword() {
 
         <button
           style={{
-             width: "100%",
+            width: "100%",
             padding: "10px",
             backgroundColor: "#207ED0",
             border: "none",
@@ -105,9 +110,7 @@ function ResetPassword() {
           }}
           type="submit"
         >
-           <Link to="/otp" className="auth-link">
-             Continue
-            </Link>
+          Continue
         </button>
 
         <p style={{ color: "#333", textAlign: "center", marginTop: "10px", fontSize: "15px",}}>

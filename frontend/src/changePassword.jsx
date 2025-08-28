@@ -1,9 +1,33 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+
 
 function ChangePassword() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [email, setEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    try {
+      const res = await axios.post("http://localhost:3000/api/auth/change-password", {
+        email,
+        oldPassword: "", 
+        newPassword
+      });
+      toast.success(res.data.message || "Password changed successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Password change failed");
+    }
+  };
 
   return (
     <div
@@ -19,6 +43,7 @@ function ChangePassword() {
       </div>
 
       <form
+        onSubmit={handleSubmit}
         style={{
           backgroundColor: "white",
           padding: "30px",
@@ -46,17 +71,22 @@ function ChangePassword() {
           Please reset your Password.
         </p>
 
-        {/* New Password */}
+        
         <div style={{ marginBottom: "15px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              
-              fontSize: "16px",
-              color: "#333",
-            }}
-          >
+          <label style={{ display: "block", marginBottom: "5px", fontSize: "16px", color: "#333" }}>
+            Email
+          </label>
+          <input
+            type="email"
+            placeholder="Enter your email"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            style={{ flex: 1, padding: "8px", borderRadius: "14px", border: "1px solid #ccc" }}
+          />
+        </div>
+        <div style={{ marginBottom: "15px" }}>
+          <label style={{ display: "block", marginBottom: "5px", fontSize: "16px", color: "#333" }}>
             New Password
           </label>
           <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
@@ -64,38 +94,21 @@ function ChangePassword() {
               type={showNew ? "text" : "password"}
               placeholder="Enter your password"
               required
-              style={{
-                flex: 1,
-                padding: "8px 35px 8px 8px",
-                borderRadius: "14px",
-                border: "1px solid #ccc",
-              }}
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              style={{ flex: 1, padding: "8px 35px 8px 8px", borderRadius: "14px", border: "1px solid #ccc" }}
             />
             <img
               src={showNew ? "/img/eye-open.png" : "/img/eye-closed.png"}
               alt="toggle"
               onClick={() => setShowNew(!showNew)}
-              style={{
-                position: "absolute",
-                right: "10px",
-                cursor: "pointer",
-                width: "20px",
-                height: "20px",
-              }}
+              style={{ position: "absolute", right: "10px", cursor: "pointer", width: "20px", height: "20px" }}
             />
           </div>
         </div>
 
         <div style={{ marginBottom: "20px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              
-              fontSize: "16px",
-              color: "#333",
-            }}
-          >
+          <label style={{ display: "block", marginBottom: "5px", fontSize: "16px", color: "#333" }}>
             Confirm Password
           </label>
           <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
@@ -103,24 +116,15 @@ function ChangePassword() {
               type={showConfirm ? "text" : "password"}
               placeholder="Confirm your password"
               required
-              style={{
-                flex: 1,
-                padding: "8px 35px 8px 8px", 
-                borderRadius: "14px",
-                border: "1px solid #ccc",
-              }}
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              style={{ flex: 1, padding: "8px 35px 8px 8px", borderRadius: "14px", border: "1px solid #ccc" }}
             />
             <img
               src={showConfirm ? "/img/eye-open.png" : "/img/eye-closed.png"}
               alt="toggle"
               onClick={() => setShowConfirm(!showConfirm)}
-              style={{
-                position: "absolute",
-                right: "10px",
-                cursor: "pointer",
-                width: "20px",
-                height: "20px",
-              }}
+              style={{ position: "absolute", right: "10px", cursor: "pointer", width: "20px", height: "20px" }}
             />
           </div>
         </div>
