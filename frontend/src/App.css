@@ -6,10 +6,11 @@ body {
   background-position: 0 0;
   display: flex;
   justify-content: flex-end;
-  height: 95vh;
+  height: 92vh;
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 .head {
   position: fixed;

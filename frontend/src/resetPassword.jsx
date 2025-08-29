@@ -1,17 +1,19 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
 function ResetPassword() {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:3000/api/auth/send-reset-otp", { email });
       toast.success(res.data.message || "OTP sent to your email");
+      navigate("/set-new-password", { state: { email } });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to send OTP");
     }
@@ -115,7 +117,7 @@ function ResetPassword() {
 
         <p style={{ color: "#333", textAlign: "center", marginTop: "10px", fontSize: "15px",}}>
           Back to{" "}
-          <Link to="/signin" className="auth-link">
+          <Link to="/" className="auth-link">
             Sign In
           </Link>
         </p>

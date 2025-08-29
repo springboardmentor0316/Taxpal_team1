@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { API_BASE_URL } from './config';
@@ -8,6 +9,7 @@ function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (email, password) => {
@@ -65,7 +67,8 @@ function SignIn() {
             borderRadius: "40px",
             boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
             width: "420px",
-            height: "425px",
+            height: "405px",
+            marginBottom: "85px",
           }}
         >
           <h2
@@ -92,24 +95,29 @@ function SignIn() {
               onChange={e => setEmail(e.target.value)}
             />
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
             <label style={{ fontSize: "16px", color: "#333333", marginBottom: "5px", display: "block" }}>Password:</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               required
               value={password}
               onChange={e => setPassword(e.target.value)}
+              style={{ width: "89%", padding: "10px 38px 10px 10px", borderRadius: "14px", border: "1px solid #070707", fontSize: "14px", color: "black", backgroundColor: "white" }}
             />
+            <span
+              onClick={() => setShowPassword(v => !v)}
+              style={{ position: "absolute", right: 12, top: 38, cursor: "pointer", color: "#888", fontSize: 18 }}
+              tabIndex={0}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
             <div className="inline">
-              <div className="space">
-                <input type="checkbox" />
-                <label>Remember me</label>
-              </div>
               <a
-                style={{ color: "#207ED0", fontSize: "16px", textDecoration: "none", marginLeft: "23%" }}
+                style={{ color: "#207ED0", fontSize: "16px", textDecoration: "none", marginLeft: "65%" }}
                 id="f"
-                href="/verify-email"
+                href="/reset-password"
               >
                 Forgot password?
               </a>
@@ -131,7 +139,7 @@ function SignIn() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
-          <p style={{ textAlign: "center", marginTop: "3px" }}>
+          <p style={{ textAlign: "center", marginTop: "3px", color:"black" }}>
             Don't have an account?{" "}
             <Link to="/signup" className="auth-link">
               Sign up

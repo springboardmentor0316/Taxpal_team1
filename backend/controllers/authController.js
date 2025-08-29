@@ -6,16 +6,16 @@ import nodemailer from 'nodemailer';
 const JWT_SECRET = process.env.JWT_SECRET || 'taxpal_default_secret_key';
 const CLIENT_URL = process.env.CLIENT_URL;
 let transporter;
-console.log('📧 Setting up email transport...');
-console.log('📧 Checking email configuration...');
-console.log('📧 .env file loaded properly:', process.env.EMAIL_USER ? 'Yes' : 'No');
-console.log('📧 EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'Not set');
-console.log('📧 EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'Not set');
-console.log('📧 NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log(' Setting up email transport...');
+console.log(' Checking email configuration...');
+console.log(' .env file loaded properly:', process.env.EMAIL_USER ? 'Yes' : 'No');
+console.log(' EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'Not set');
+console.log(' EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'Not set');
+console.log(' NODE_ENV:', process.env.NODE_ENV || 'not set');
 async function initializeEmailTransport() {
   try {
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      console.log('📧 Setting up Gmail transport with real credentials');
+      console.log(' Setting up Gmail transport with real credentials');
       transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -27,13 +27,13 @@ async function initializeEmailTransport() {
       console.log('✅ Gmail SMTP server connection verified');
       return null;
     } else {
-      console.log('📧 No email credentials found, setting up Ethereal test account...');
+      console.log(' No email credentials found, setting up Ethereal test account...');
       const testAccount = await nodemailer.createTestAccount();
-      console.log('📧 Ethereal test email account created successfully!');
-      console.log('📧 Username:', testAccount.user);
-      console.log('📧 Password:', testAccount.pass);
-      console.log('📧 IMPORTANT: You can view sent emails at https://ethereal.email');
-      console.log('📧 Login with the username and password shown above');      
+      console.log(' Ethereal test email account created successfully!');
+      console.log(' Username:', testAccount.user);
+      console.log(' Password:', testAccount.pass);
+      console.log(' IMPORTANT: You can view sent emails at https://ethereal.email');
+      console.log(' Login with the username and password shown above');      
       transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
@@ -48,9 +48,9 @@ async function initializeEmailTransport() {
     }
   } catch (error) {
     console.error('❌ Failed to create email transport:', error.message);
-    console.log('📧 Falling back to console logging for emails');
-    console.log('📧 To use real email, ensure EMAIL_USER and EMAIL_PASS are correctly set in .env');
-    console.log('📧 Current process.env keys:', Object.keys(process.env).join(', '));
+    console.log(' Falling back to console logging for emails');
+    console.log(' To use real email, ensure EMAIL_USER and EMAIL_PASS are correctly set in .env');
+    console.log(' Current process.env keys:', Object.keys(process.env).join(', '));
     transporter = {
       sendMail: (mailOptions) => {
         console.log('=============== EMAIL CONTENTS ===============');
@@ -102,11 +102,11 @@ async function sendOTP(email, otp, name = '') {
   try {
     const info = await transporter.sendMail(mailOptions);
     if (info && info.messageId) {
-      console.log('✉️ Email sent successfully!');
-      console.log('📋 Message ID:', info.messageId);
+      console.log(' Email sent successfully!');
+      console.log(' Message ID:', info.messageId);
       if (info.previewURL) {
-        console.log('🔗 Preview URL:', info.previewURL);
-        console.log('📧 View the email at https://ethereal.email');
+        console.log(' Preview URL:', info.previewURL);
+        console.log(' View the email at https://ethereal.email');
       }
     }
     return info;
@@ -122,21 +122,30 @@ export const register = async (req, res) => {
     if (!name || !email || !password) return res.status(400).json({ message: 'All fields required' });
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email already registered' });
-    const hashed = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = Date.now() + 10 * 60 * 1000;
     const userData = { 
       name, 
       email, 
-      password: hashed, 
+      password: hashedPassword, 
       otp, 
-      otpExpiry 
+      otpExpiry, 
+      country, 
+      income 
     };
     
-    if (country) userData.country = country;
-    if (income) userData.income = income;
     console.log('Creating user with data:', userData);
-    const user = await User.create(userData);
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      otp,
+      otpExpiry,
+      country,
+      income
+    });
+    await user.save();
     console.log('User created:', user._id);
     try {
       const emailInfo = await sendOTP(email, otp, name);
@@ -360,29 +369,25 @@ export const resendOtp = async (req, res) => {
       const previewUrl = emailInfo?.previewURL;
       if (previewUrl) {
         console.log('✅ Use the Ethereal preview URL to view the email:', previewUrl);
-        res.json({ 
+        return res.json({ 
           success: true,
-          message: 'New OTP sent to your email',
-          emailPreview: previewUrl
+          message: 'OTP resent. Check your email',
+          emailPreview: previewUrl 
         });
       } else {
-        res.json({ 
-          success: true,
-          message: 'New OTP sent to your email'
-        });
+        return res.json({ message: 'OTP resent. Check your email' });
       }
     } catch (emailError) {
-      console.error('Error sending OTP email:', emailError);
-     
-      res.json({ 
+      console.error('Error resending OTP email:', emailError);
+      return res.json({ 
         success: true,
-        message: 'New OTP generated. Use code: ' + otp,
+        message: 'OTP resent. Use this code: ' + otp,
         testOtp: otp 
       });
     }
   } catch (err) {
     console.error('Resend OTP error:', err);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Failed to resend OTP', 
       error: err.message 
@@ -395,8 +400,14 @@ export const changePassword = async (req, res) => {
     const { email, oldPassword, newPassword } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'User not found' });
+    
     const match = await bcrypt.compare(oldPassword, user.password);
-    if (!match) return res.status(400).json({ message: 'Old password incorrect' });
+    if (!match) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid old password' 
+      });
+    }
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
     res.json({ message: 'Password changed successfully' });

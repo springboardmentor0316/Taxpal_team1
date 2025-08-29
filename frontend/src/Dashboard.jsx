@@ -28,7 +28,7 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* NAVBAR */}
+      
       <div className="navbar">
         <div className="logo">
           <img src="/img/taxpal1.png" alt="Taxpal Logo" />
@@ -46,7 +46,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* SIDEBAR */}
+      
       <div className="sidebar">
         <div className="menu-title">MENU</div>
         <nav className="nav-menu">
@@ -89,9 +89,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
+      
       <div className="dashboard-content">
-        {/* Welcome Row */}
+   
         <div className="welcome-row">
           <h2>Welcome, {userName}</h2>
           <div className="action-buttons">
@@ -100,7 +100,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Summary Cards */}
+        
         <div className="summary-cards">
           <div className="summary-card income">
             <span>Monthly Income</span>
@@ -128,7 +128,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Charts */}
+    
         <div className="charts-row">
           <div className="income-expense-chart">
             <div className="chart-header">
@@ -152,7 +152,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Transactions */}
         <div className="transactions-panel">
           <h3>Recent Transactions</h3>
           <table>

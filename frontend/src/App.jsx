@@ -1,9 +1,10 @@
 
 import SignIn from './Sign in.jsx';
 import SignUp from "./Sign Up.jsx";
-import ChangePassword from './changePassword.jsx';
+
 import OtpInput from './Otp.jsx';
 import ResetPassword from './resetPassword.jsx';
+import SetNewPassword from './SetNewPassword.jsx';
 import { VerifyEmail } from './VerifyEmail.jsx';
 import Dashboard from './Dashboard.jsx';
 
@@ -21,7 +22,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/otp" element={<OtpInput />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/set-new-password" element={<SetNewPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>

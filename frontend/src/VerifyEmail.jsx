@@ -116,24 +116,27 @@ export function VerifyEmail() {
         </div>
         
         <div className="form-container">
-          <h2 style={{
-            marginBottom: "20px",
-            textAlign: "center",
-            color: "#333"
-          }}>
-            Verify Your Email
-          </h2>
-          
           <form
             onSubmit={handleVerify}
             style={{
               backgroundColor: "white",
-              padding: "43px",
-              borderRadius: "15px",
-              boxShadow: "0px 0px 15px rgba(0, 0, 0, 0.1)",
-              width: "350px",
+              padding: "36px 53px 28px",
+              borderRadius: "5px",
+              flexDirection: "column",
+              alignItems: "stretch"
             }}
           >
+            <h2 style={{
+              marginBottom: "18px",
+              textAlign: "center",
+              color: "#207ED0",
+              fontSize: "1.6rem",
+              fontWeight: 700,
+              letterSpacing: 1,
+              color: "black"
+            }}>
+              Verify Your Email
+            </h2>
             <p style={{
               fontSize: "14px",
               color: "#555",
@@ -160,9 +163,9 @@ export function VerifyEmail() {
                 readOnly={!!email}
                 style={{
                   width: "100%",
-                  padding: "10px",
+                  padding: "13px",
                   marginBottom: "15px",
-                  borderRadius: "5px",
+                  borderRadius: "14px",
                   border: "1px solid #ddd",
                   fontSize: "14px",
                 }}
@@ -186,9 +189,9 @@ export function VerifyEmail() {
                 placeholder="Enter OTP code"
                 style={{
                   width: "100%",
-                  padding: "10px",
+                  padding: "13px",
                   marginBottom: "15px",
-                  borderRadius: "5px",
+                  borderRadius: "14px",
                   border: "1px solid #ddd",
                   fontSize: "14px",
                   letterSpacing: "0.25em",
@@ -201,11 +204,11 @@ export function VerifyEmail() {
               type="submit"
               disabled={loading}
               style={{
-                width: "100%",
+                width: "107%",
                 padding: "12px",
                 backgroundColor: loading ? "#6ca2d9" : "#207ED0",
                 border: "none",
-                borderRadius: "5px",
+                borderRadius: "14px",
                 color: "white",
                 fontSize: "16px",
                 cursor: loading ? "not-allowed" : "pointer",

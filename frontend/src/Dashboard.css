@@ -80,7 +80,7 @@ body {
   flex-direction: column;
   position: fixed;
   left: 0;
-  top: 75px; /* below navbar */
+  top: 75px; 
   z-index: 10;
   box-shadow: 2px 0 8px rgba(41,65,95,0.04);
 }
@@ -144,7 +144,6 @@ body {
   background: #f6faff;
 }
 
-/* Dark mode toggle switch */
 .switch {
   margin-left: auto;
   position: relative;
@@ -183,7 +182,6 @@ body {
   transform: translateX(13px);
 }
 
-/* Main Content Wrapper */
 .dashboard-content {
   margin-right: 170px;
   margin-top: 90px;
@@ -237,7 +235,6 @@ body {
   opacity: .96;
 }
 
-/* Summary Cards */
 .summary-cards {
   display: flex;
   gap: 26px;
@@ -282,7 +279,7 @@ body {
   font-weight: bold;
 }
 
-/* Charts Row */
+
 .charts-row {
   display: flex;
   gap: 26px;
@@ -326,7 +323,7 @@ body {
   margin-bottom: 0;
 }
 
-/* Legend */
+
 .legend {
   margin-top: 14px;
   font-size: 1rem;
@@ -340,7 +337,7 @@ body {
   font-weight: 600;
 }
 
-/* Transactions panel */
+
 .transactions-panel {
   margin-top: 30px;
   background: #fff;
@@ -375,7 +372,6 @@ body {
   font-style: italic;
 }
 
-/* Responsive */
 @media (max-width: 1200px) {
   .dashboard-content {
     margin-left: 0;
