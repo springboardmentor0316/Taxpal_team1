@@ -2,7 +2,6 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-
 const JWT_SECRET = process.env.JWT_SECRET || 'taxpal_default_secret_key';
 const CLIENT_URL = process.env.CLIENT_URL;
 let transporter;
