@@ -4,7 +4,6 @@ body {
   min-height: 117vh;
   margin: 0;
 }
-
 .navbar {
   width: 100%;
   height: 75px;
@@ -19,7 +18,6 @@ body {
   left: 0;
   z-index: 1000;
 }
-
 .logo {
   display: flex;
   align-items: center;
@@ -34,7 +32,6 @@ body {
   color: #818da8;
   font-weight: 500;
 }
-
 .nav-icons {
   display: flex;
   align-items: center;
