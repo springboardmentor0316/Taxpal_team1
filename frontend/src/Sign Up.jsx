@@ -4,10 +4,7 @@
   import axios from "axios";
   import { toast } from "react-toastify";
   import { API_BASE_URL } from './config';
-
-
   import { useEffect } from "react";
-
   function SignUp() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -15,13 +12,10 @@
     const [confirmPassword, setConfirmPassword] = useState("");
     const [country, setCountry] = useState("");
     const [income, setIncome] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const navigate = useNavigate();
-
-  
     useEffect(() => {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
