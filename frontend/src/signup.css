@@ -1,0 +1,129 @@
+
+.signup-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(180deg,#f1f3f6 0%,#b8cce4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.signup-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.signup-header .logo {
+  width: 280px;
+  max-width: 65vw;
+  margin-bottom: 12px;
+  opacity: 0.96;
+}
+.signup-header .para {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.form-container {
+  background: #fff;
+  padding: 32px 26px 18px 26px;
+  border-radius: 26px;
+  box-shadow: 0 8px 24px 0 rgba(126, 144, 179, 0.15);
+  min-width: 320px;
+  width: 370px;
+  max-width: 94vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.form-container h2 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #207ED0;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.form-container .subtext {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+.form-group {
+  margin-bottom: 1.1rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.form-group label {
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  letter-spacing: .5px;
+  font-size: 1rem;
+}
+input, select {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid #bfc8d3;
+  font-size: 1rem;
+  background: #fafbfc;
+  color: #111;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus {
+  border-color: #207ED0;
+}
+button[type="submit"] {
+  width: 100%;
+  padding: 13px 0;
+  background: #207ED0;
+  color: #fff;
+  border: none;
+  border-radius: 13px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  margin-bottom: 0.7rem;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+button[disabled] {
+  background: #6ca2d9;
+  cursor: not-allowed;
+}
+.signin-link {
+  font-size: 1rem;
+  color: #333;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.auth-link {
+  color: #207ED0;
+  font-weight: 500;
+  text-decoration: none;
+  margin-left: 3px;
+  transition: color 0.18s;
+}
+.auth-link:hover {
+  color: #14507b;
+  text-decoration: underline;
+}
+
+@media (max-width:480px) {
+  .form-container {
+    padding: 18px 7px 13px 7px;
+    min-width: 80vw;
+    width: 96vw;
+  }
+  .signup-header .logo {
+    width: 140px;
+  }
+}
