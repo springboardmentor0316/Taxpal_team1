@@ -116,7 +116,7 @@
 
         <div className="form-container">
           <h2
-            style={{ marginBottom: "-9%", textAlign: "center", color: "#333", marginLeft: "-15%" }}
+            style={{ marginBottom: "-9%", textAlign: "center", color: "#333", marginLeft: "-15%", marginTop: "4%", }}
           >
             Sign Up
           </h2>
@@ -129,7 +129,7 @@
               borderRadius: "40px",
               boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
               width: "420px",
-              height: "702px",
+              height: "580px",
               
             }}
           >
@@ -137,7 +137,7 @@
               style={{
                 fontSize: "14px",
                 color: "#555",
-                marginBottom: "15px",
+                marginBottom: "21px",
                 textAlign: "center",
                 marginTop: "20px",
               }}

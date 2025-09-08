@@ -57,7 +57,8 @@ function OtpInput() {
           borderRadius: "40px",
           boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
           width: "420px",
-          height: "425px",
+          height: "405px",
+          marginTop: "17%",
         }}
       >
           <h3 style={{ marginBottom: "20px",  textAlign: "center",color: "#333", marginTop: "90px", }}>Enter Your OTP</h3>

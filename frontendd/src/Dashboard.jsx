@@ -2,9 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './Dashboard.css';
+import Income from './Income.jsx';
+import Expenses from './Expenses.jsx';
 function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('User');
+
+   // modal states
+  const [showIncome, setShowIncome] = useState(false);
+  const [showExpenses, setShowExpenses] = useState(false);
 
   useEffect(() => {
     const userInfo = localStorage.getItem('user');
@@ -75,12 +81,12 @@ function Dashboard() {
         </nav>
         <div className="sidebar-bottom">
           <button className="settings-btn">
-            <i className="fa-solid fa-gear"></i>
-            <span>Settings</span>
+            <i style={{width: "30px"}} className="fa-solid fa-gear"></i>
+            <span style={{marginLeft: "19px",}}>Settings</span>
           </button>
           <div className="dark-mode-toggle">
-            <i className="fa-solid fa-moon"></i>
-            <span>Dark Mode</span>
+            <i style={{width: "20px"}} className="fa-solid fa-moon"></i>
+            <span style={{marginLeft: "21px",}}>Dark Mode</span>
             <label className="switch">
               <input type="checkbox" />
               <span className="slider"></span>
@@ -91,15 +97,23 @@ function Dashboard() {
 
       
       <div className="dashboard-content">
-   
         <div className="welcome-row">
           <h2>Welcome, {userName}</h2>
           <div className="action-buttons">
-            <button className="income-btn">Record New Income</button>
-            <button className="expense-btn">Record New Expense</button>
+            <button
+              className="income-btn"
+              onClick={() => setShowIncome(true)}
+            >
+              Record New Income
+            </button>
+            <button
+              className="expense-btn"
+              onClick={() => setShowExpenses(true)}
+            >
+              Record New Expense
+            </button>
           </div>
         </div>
-
         
         <div className="summary-cards">
           <div className="summary-card income">
@@ -171,6 +185,18 @@ function Dashboard() {
           </table>
         </div>
       </div>
+      
+      {/* MODALS */}
+      {showIncome && (
+        <div className="modal-overlay">
+          <Income onClose={() => setShowIncome(false)} />
+        </div>
+      )}
+      {showExpenses && (
+        <div className="modal-overlay">
+          <Expenses onClose={() => setShowExpenses(false)} />
+        </div>
+      )}
     </div>
   );
 }

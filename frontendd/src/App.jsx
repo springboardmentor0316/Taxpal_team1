@@ -9,6 +9,8 @@ import VerifyEmail from "./VerifyEmail.jsx";
 import Dashboard from "./Dashboard.jsx";
 import ResetPassword from "./resetPassword.jsx";
 import SetNewPassword from "./SetNewPassword.jsx";
+import Budget from "./BudgetSet.jsx"
+import SettingPage from "./SettingPage.jsx"
 import "./App.css";
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
         <Route path="/otp" element={<OtpInput />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/setting-page" element={<SettingPage />} />
+        <Route path="/budget" element={<Budget />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
       </Routes>

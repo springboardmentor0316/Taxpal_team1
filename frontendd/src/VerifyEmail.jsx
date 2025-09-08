@@ -106,8 +106,6 @@ export function VerifyEmail() {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      padding: "-2px",
-      backgroundImage: "linear-gradient(to bottom, #f5f7fa, #e4e7eb)",
     }}>
       <div className="container">
         <div className="head">
@@ -119,11 +117,14 @@ export function VerifyEmail() {
           <form
             onSubmit={handleVerify}
             style={{
-              backgroundColor: "white",
-              padding: "36px 53px 28px",
-              borderRadius: "5px",
-              flexDirection: "column",
-              alignItems: "stretch"
+            backgroundColor: "white",
+            padding: "30px",
+            marginRight: "98px",
+            borderRadius: "40px",
+            boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
+            width: "420px",
+            height: "405px",
+            marginTop: "17%",
             }}
           >
             <h2 style={{
@@ -162,7 +163,7 @@ export function VerifyEmail() {
                 placeholder="Enter your email"
                 readOnly={!!email}
                 style={{
-                  width: "100%",
+                  width: "93%",
                   padding: "13px",
                   marginBottom: "15px",
                   borderRadius: "14px",
@@ -188,7 +189,7 @@ export function VerifyEmail() {
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="Enter OTP code"
                 style={{
-                  width: "100%",
+                  width: "93%",
                   padding: "13px",
                   marginBottom: "15px",
                   borderRadius: "14px",
@@ -204,7 +205,7 @@ export function VerifyEmail() {
               type="submit"
               disabled={loading}
               style={{
-                width: "107%",
+                width: "100%",
                 padding: "12px",
                 backgroundColor: loading ? "#6ca2d9" : "#207ED0",
                 border: "none",
