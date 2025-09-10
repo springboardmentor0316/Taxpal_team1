@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./Dashboard.css";
@@ -12,6 +12,26 @@ function Dashboard() {
   // modal states
   const [showIncome, setShowIncome] = useState(false);
   const [showExpenses, setShowExpenses] = useState(false);
+
+  // transactions state (persisted in localStorage)
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const saved = localStorage.getItem("transactions");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+    } catch (e) {}
+  }, [transactions]);
+
+  const handleAddTransaction = (tx) => {
+    setTransactions((prev) => [{ id: Date.now(), ...tx }, ...prev]);
+  };
 
   //dark mode
   // const [darkMode, setDarkMode] = useState(() => {
@@ -201,9 +221,22 @@ function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan="4">No Transactions Yet, Record new Expenses!</td>
-              </tr>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan="4">No Transactions Yet, record new income or expenses!</td>
+                </tr>
+              ) : (
+                transactions.map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.date}</td>
+                    <td>{t.description}</td>
+                    <td>{t.category}</td>
+                    <td style={{ color: t.type === "income" ? "#34cc85" : "#e25454" }}>
+                      {t.type === "income" ? "+" : "-"}${Number(t.amount).toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -212,12 +245,24 @@ function Dashboard() {
       {/* MODALS */}
       {showIncome && (
         <div className="modal-overlay">
-          <Income onClose={() => setShowIncome(false)} />
+          <Income
+            onClose={() => setShowIncome(false)}
+            onSave={(data) => {
+              handleAddTransaction({ ...data, type: "income" });
+              setShowIncome(false);
+            }}
+          />
         </div>
       )}
       {showExpenses && (
         <div className="modal-overlay">
-          <Expenses onClose={() => setShowExpenses(false)} />
+          <Expenses
+            onClose={() => setShowExpenses(false)}
+            onSave={(data) => {
+              handleAddTransaction({ ...data, type: "expense" });
+              setShowExpenses(false);
+            }}
+          />
         </div>
       )}
     </div>

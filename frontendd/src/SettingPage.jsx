@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { User, Tag, Bell, Lock, SquarePen, X } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import logo from "../img/taxpal1.png";
 
 function Settings() {
-  const categories = [
+  const [categories, setCategories] = useState([
     { color: "red", name: "Travel" },
     { color: "blue", name: "Marketing" },
     { color: "purple", name: "Software Subscription" },
@@ -13,8 +13,34 @@ function Settings() {
     { color: "green", name: "Professional Development" },
     { color: "gold", name: "Utilities" },
     { color: "gray", name: "Business Expenses" },
-    { color: "gold", name: "Utilities" },
-  ];
+  ]);
+
+  const handleAddCategory = () => {
+    const name = window.prompt("Enter new category name");
+    if (!name || !name.trim()) return;
+    const color = window.prompt(
+      "Enter color (CSS name or hex, e.g. #10b981)",
+      "gray"
+    ) || "gray";
+    setCategories(prev => [...prev, { name: name.trim(), color }]);
+  };
+
+  const handleEditCategory = (index) => {
+    const current = categories[index];
+    const name = window.prompt("Edit category name", current.name);
+    if (!name || !name.trim()) return;
+    const color = window.prompt("Edit color", current.color) || current.color;
+    setCategories(prev => {
+      const next = [...prev];
+      next[index] = { name: name.trim(), color };
+      return next;
+    });
+  };
+
+  const handleDeleteCategory = (index) => {
+    if (!window.confirm("Delete this category?")) return;
+    setCategories(prev => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <div style={{ fontFamily: "Aboreto, system-ui", padding: "70px" }}>
@@ -248,8 +274,15 @@ function Settings() {
                       size={18}
                       color="#999"
                       style={{ cursor: "pointer" }}
+                      title="Edit"
+                      onClick={() => handleEditCategory(idx)}
                     />{" "}
-                    <X size={18} color="#999" />
+                    <X
+                      size={18}
+                      color="#999"
+                      title="Delete"
+                      onClick={() => handleDeleteCategory(idx)}
+                    />
                   </span>
                 </li>
               ))}
@@ -270,6 +303,7 @@ function Settings() {
                 cursor: "pointer",
                 fontSize: "16px",
               }}
+              onClick={handleAddCategory}
             >
               + Add New Category
             </button>

@@ -1,6 +1,6 @@
 import "./Dashboard.css";
 
-function Expenses({ onClose }) {
+function Expenses({ onClose, onSave }) {
   return (
     <div>
       <div className="body-expin">
@@ -15,7 +15,17 @@ function Expenses({ onClose }) {
             Add details about your expenses to track your finance
           </p>
 
-          <form>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const description = form.querySelector('input[name="description"]').value.trim();
+            const amount = form.querySelector('input[name="amount"]').value.trim();
+            const category = form.querySelector('input[name="category"]').value.trim();
+            const date = form.querySelector('input[name="date"]').value;
+            const notes = form.querySelector('textarea[name="notes"]').value.trim();
+            if (!description || !amount || !category || !date) return;
+            onSave && onSave({ description, amount: parseFloat(amount), category, date, notes });
+          }}>
             <h3>Add Expenses</h3>
             <div className="form-row-expin">
               <div className="form-group-expin">
@@ -28,7 +38,7 @@ function Expenses({ onClose }) {
                 >
                   Description
                 </label>
-                <input type="text" placeholder="e.g groceries, rent" />
+                <input name="description" type="text" placeholder="e.g groceries, rent" />
               </div>
               <div className="form-group">
                 <label
@@ -41,7 +51,7 @@ function Expenses({ onClose }) {
                 >
                   Amount
                 </label>
-                <input type="text" placeholder="e.g 2000" />
+                <input name="amount" type="number" step="0.01" placeholder="e.g 2000" />
               </div>
             </div>
 
@@ -57,7 +67,7 @@ function Expenses({ onClose }) {
                 >
                   Category
                 </label>
-                <input type="text" placeholder="e.g food, utilities" />
+                <input name="category" type="text" placeholder="e.g food, utilities" />
               </div>
               <div className="form-group">
                 <label
@@ -70,7 +80,7 @@ function Expenses({ onClose }) {
                 >
                   Date
                 </label>
-                <input type="date" />
+                <input name="date" type="date" />
               </div>
             </div>
 
@@ -86,6 +96,7 @@ function Expenses({ onClose }) {
                 Notes (Optional)
               </label>
               <textarea
+                name="notes"
                 style={{
                   resize: "none",
                   height: "80px",
