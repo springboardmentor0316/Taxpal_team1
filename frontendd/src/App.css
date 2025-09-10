@@ -8,21 +8,14 @@ body {
   font-family: "Aboreto", system-ui;
   font-weight: 400;
   font-style: normal;
-  /* background-image:
-    linear-gradient(to right, lightgray 1px, transparent 1px),
-    linear-gradient(to bottom, lightgray 1px, transparent 1px);
-
-
-  background-size: calc(100vw / 12) calc(100vh / 12);
-
-  background-position: 0 0; */
   display: flex;
   justify-content: flex-end;
   height: 92vh;
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 .head {
   position: fixed;

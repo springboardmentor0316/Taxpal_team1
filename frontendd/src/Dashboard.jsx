@@ -1,43 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import './Dashboard.css';
-import Income from './Income.jsx';
-import Expenses from './Expenses.jsx';
+import React, { use, useEffect, useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import "./Dashboard.css";
+import Income from "./Income.jsx";
+import Expenses from "./Expenses.jsx";
+import logo from "../img/taxpal1.png";
 function Dashboard() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('User');
+  const [userName, setUserName] = useState("User");
 
-   // modal states
+  // modal states
   const [showIncome, setShowIncome] = useState(false);
   const [showExpenses, setShowExpenses] = useState(false);
 
+  //dark mode
+  // const [darkMode, setDarkMode] = useState(() => {
+  //   const saved = localStorage.getItem("darkMode");
+  //   return saved === "true";
+  // });
+
+  // useEffect(() => {
+  //   document.documentElement.classList.toggle("dark", darkMode);
+  //   localStorage, setItem("darkMode", String(darkMode));
+  // }, [darkMode]);
+
   useEffect(() => {
-    const userInfo = localStorage.getItem('user');
+    const userInfo = localStorage.getItem("user");
     if (userInfo) {
       try {
         const user = JSON.parse(userInfo);
-        setUserName(user.name || 'User');
-        toast.success(`Welcome back, ${user.name || 'User'}!`);
+        setUserName(user.name || "User");
+        toast.success(`Welcome back, ${user.name || "User"}!`);
       } catch (err) {
-        console.error('Error parsing user info:', err);
+        console.error("Error parsing user info:", err);
       }
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    toast.info('Logged out successfully');
-    navigate('/');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    toast.info("Logged out successfully");
+    navigate("/");
   };
 
   return (
     <div className="dashboard-container">
-      
       <div className="navbar">
-        <div className="logo">
-          <img src="/img/taxpal1.png" alt="Taxpal Logo" />
+        <div className="brand">
+          <img src={logo} alt="Taxpal Logo" />
           <span className="tagline">Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
@@ -48,45 +59,62 @@ function Dashboard() {
             alt="User Profile"
             className="avatar"
           />
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </div>
 
-      
       <div className="sidebar">
         <div className="menu-title">MENU</div>
         <nav className="nav-menu">
           <ul>
-            <li className="active">
-              <i className="fa-solid fa-bars"></i>
-              <span className="text">Dashboard</span>
+            <li
+              className={
+                useLocation().pathname === "/dashboard" ? "active" : ""
+              }
+            >
+              <Link to="/dashboard">
+                <i className="fa-solid fa-bars"></i>
+                <span className="text">Dashboard</span>
+              </Link>
             </li>
             <li>
-              <i className="fa-solid fa-check"></i>
-              <span className="text">Transactions</span>
+              <Link to="#">
+                <i className="fa-solid fa-check"></i>
+                <span className="text">Transactions</span>
+              </Link>
+            </li>
+            <li
+              className={useLocation().pathname === "/budget" ? "active" : ""}
+            >
+              <Link to="/budget">
+                <i className="fa-solid fa-money-bill"></i>
+                <span className="text">Budget</span>
+              </Link>
             </li>
             <li>
-              <i className="fa-solid fa-money-bill"></i>
-              <span className="text">Budget</span>
+              <Link to="#">
+                <i className="fa-solid fa-money-bill-trend-up"></i>
+                <span className="text">Tax Estimator</span>
+              </Link>
             </li>
             <li>
-              <i className="fa-solid fa-money-bill-trend-up"></i>
-              <span className="text">Tax Estimator</span>
-            </li>
-            <li>
-              <i className="fa-solid fa-file"></i>
-              <span className="text">Reports</span>
+              <Link to="#">
+                <i className="fa-solid fa-file"></i>
+                <span className="text">Reports</span>
+              </Link>
             </li>
           </ul>
         </nav>
         <div className="sidebar-bottom">
-          <button className="settings-btn">
-            <i style={{width: "30px"}} className="fa-solid fa-gear"></i>
-            <span style={{marginLeft: "19px",}}>Settings</span>
-          </button>
+          <Link to="/setting-page" className="settings-btn">
+            <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
+            <span style={{ marginLeft: "19px" }}>Settings</span>
+          </Link>
           <div className="dark-mode-toggle">
-            <i style={{width: "20px"}} className="fa-solid fa-moon"></i>
-            <span style={{marginLeft: "21px",}}>Dark Mode</span>
+            <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
+            <span style={{ marginLeft: "21px" }}>Dark Mode</span>
             <label className="switch">
               <input type="checkbox" />
               <span className="slider"></span>
@@ -95,15 +123,11 @@ function Dashboard() {
         </div>
       </div>
 
-      
       <div className="dashboard-content">
         <div className="welcome-row">
           <h2>Welcome, {userName}</h2>
           <div className="action-buttons">
-            <button
-              className="income-btn"
-              onClick={() => setShowIncome(true)}
-            >
+            <button className="income-btn" onClick={() => setShowIncome(true)}>
               Record New Income
             </button>
             <button
@@ -114,7 +138,7 @@ function Dashboard() {
             </button>
           </div>
         </div>
-        
+
         <div className="summary-cards">
           <div className="summary-card income">
             <span>Monthly Income</span>
@@ -142,7 +166,6 @@ function Dashboard() {
           </div>
         </div>
 
-    
         <div className="charts-row">
           <div className="income-expense-chart">
             <div className="chart-header">
@@ -185,7 +208,7 @@ function Dashboard() {
           </table>
         </div>
       </div>
-      
+
       {/* MODALS */}
       {showIncome && (
         <div className="modal-overlay">

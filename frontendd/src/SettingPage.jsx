@@ -1,5 +1,7 @@
 import React from "react";
 import { User, Tag, Bell, Lock, SquarePen, X } from "lucide-react";
+import { useLocation, Link } from "react-router-dom";
+import logo from "../img/taxpal1.png";
 
 function Settings() {
   const categories = [
@@ -17,8 +19,8 @@ function Settings() {
   return (
     <div style={{ fontFamily: "Aboreto, system-ui", padding: "70px" }}>
       <div className="navbar">
-        <div className="logo">
-          <img src="/img/taxpal1.png" alt="Taxpal Logo" />
+        <div className="brand">
+          <img src={logo} alt="Taxpal Logo" />
           <span className="tagline">Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
@@ -37,25 +39,41 @@ function Settings() {
         <div className="menu-title">MENU</div>
         <nav className="nav-menu">
           <ul>
-            <li className="active">
-              <i className="fa-solid fa-bars"></i>
-              <span className="text">Dashboard</span>
+            <li
+              className={
+                useLocation().pathname === "/dashboard" ? "active" : ""
+              }
+            >
+              <Link to="/dashboard">
+                <i className="fa-solid fa-bars"></i>
+                <span className="text">Dashboard</span>
+              </Link>
             </li>
             <li>
-              <i className="fa-solid fa-check"></i>
-              <span className="text">Transactions</span>
+              <Link to="#">
+                <i className="fa-solid fa-check"></i>
+                <span className="text">Transactions</span>
+              </Link>
+            </li>
+            <li
+              className={useLocation().pathname === "/budget" ? "active" : ""}
+            >
+              <Link to="/budget">
+                <i className="fa-solid fa-money-bill"></i>
+                <span className="text">Budget</span>
+              </Link>
             </li>
             <li>
-              <i className="fa-solid fa-money-bill"></i>
-              <span className="text">Budget</span>
+              <Link to="#">
+                <i className="fa-solid fa-money-bill-trend-up"></i>
+                <span className="text">Tax Estimator</span>
+              </Link>
             </li>
             <li>
-              <i className="fa-solid fa-money-bill-trend-up"></i>
-              <span className="text">Tax Estimator</span>
-            </li>
-            <li>
-              <i className="fa-solid fa-file"></i>
-              <span className="text">Reports</span>
+              <Link to="#">
+                <i className="fa-solid fa-file"></i>
+                <span className="text">Reports</span>
+              </Link>
             </li>
           </ul>
         </nav>
@@ -81,7 +99,7 @@ function Settings() {
           display: "flex",
           flexDirection: "column",
           marginLeft: "330px",
-          marginRight: "-54px",
+          marginRight: "-70px",
         }}
       >
         {/* Header Box */}
@@ -105,7 +123,7 @@ function Settings() {
           {/* Left Box */}
           <div
             style={{
-              flexBasis: "350px",
+              flexBasis: "370px",
               flexShrink: 0,
               background: "white",
               border: "1px solid #ddd",
@@ -157,6 +175,7 @@ function Settings() {
           <div
             style={{
               flexBasis: "710px",
+              height: "72vh",
               flexShrink: 0,
               background: "white",
               border: "1px solid #ddd",
@@ -208,7 +227,7 @@ function Settings() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: "15px",
+                    marginBottom: "20px",
                   }}
                 >
                   <span>

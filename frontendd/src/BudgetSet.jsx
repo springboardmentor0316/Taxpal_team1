@@ -1,13 +1,14 @@
- import { Link} from "react-router-dom";
- import React from "react"
- import './Dashboard.css'
+import { Link, useLocation } from "react-router-dom";
+import React from "react";
+import "./Dashboard.css";
+import logo from "../img/taxpal1.png";
 
 function Budget() {
   return (
     <div>
-<div className="navbar">
-        <div className="logo">
-          <img src="/img/taxpal1.png" alt="Taxpal Logo" />
+      <div className="navbar">
+        <div className="brand">
+          <img src={logo} alt="Taxpal Logo" />
           <span className="tagline">Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
@@ -22,14 +23,15 @@ function Budget() {
         </div>
       </div>
 
-      
       <div className="sidebar">
         <div className="menu-title">MENU</div>
         <nav className="nav-menu">
           <ul>
-            <li className="active">
-              <i className="fa-solid fa-bars"></i>
-              <span className="text">Dashboard</span>
+            <li>
+              <Link to="/dashboard">
+                <i className="fa-solid fa-bars"></i>
+                <span className="text">Dashboard</span>
+              </Link>
             </li>
             <li>
               <i className="fa-solid fa-check"></i>
@@ -50,13 +52,13 @@ function Budget() {
           </ul>
         </nav>
         <div className="sidebar-bottom">
-          <button className="settings-btn">
-            <i style={{width: "30px"}} className="fa-solid fa-gear"></i>
-            <span style={{marginLeft: "19px",}}>Settings</span>
-          </button>
+          <Link to="/setting-page" className="settings-btn">
+            <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
+            <span style={{ marginLeft: "19px" }}>Settings</span>
+          </Link>
           <div className="dark-mode-toggle">
-            <i style={{width: "20px"}} className="fa-solid fa-moon"></i>
-            <span style={{marginLeft: "21px",}}>Dark Mode</span>
+            <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
+            <span style={{ marginLeft: "21px" }}>Dark Mode</span>
             <label className="switch">
               <input type="checkbox" />
               <span className="slider"></span>
@@ -69,15 +71,15 @@ function Budget() {
 
         <div className="form-row">
           <div className="form-group">
-            <label style={{marginLeft: "30px"}}>Category</label>
-            <select style={{width: "87%", marginLeft: "30px"}}>
+            <label style={{ marginLeft: "30px" }}>Category</label>
+            <select style={{ width: "87%", marginLeft: "30px" }}>
               <option>Select Category</option>
             </select>
           </div>
           <div className="form-group">
-            <label style={{marginLeft: "40px"}}>Budget Amount</label>
+            <label style={{ marginLeft: "40px" }}>Budget Amount</label>
             <input
-              style={{width: "83%", marginLeft: "39px"}}
+              style={{ width: "83%", marginLeft: "39px" }}
               type="text"
               placeholder="$ 0.00"
             />
@@ -85,16 +87,16 @@ function Budget() {
         </div>
 
         <div className="form-group">
-          <label style={{marginLeft: "30px"}}>Month</label>
+          <label style={{ marginLeft: "30px" }}>Month</label>
           <input
-            style={{width: "41.6%", marginLeft: "30px"}}
+            style={{ width: "41.6%", marginLeft: "30px" }}
             type="text"
             value="May, 2025"
           />
         </div>
 
         <div className="form-group">
-          <label style={{marginLeft: "30px"}}>Description (Optional)</label>
+          <label style={{ marginLeft: "30px" }}>Description (Optional)</label>
           <textarea placeholder="e.g web design project"></textarea>
         </div>
 
