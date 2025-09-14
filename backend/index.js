@@ -1,15 +1,27 @@
+import 'dotenv/config';
+
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
+import transactionRoutes from './routes/transactions.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+
+const corsOptions = {
+  origin: process.env.CLIENT_URL || true,
+  credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -17,8 +29,11 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/transactions', transactionRoutes);
 
-mongoose.connect(process.env.MONGO_URI)
+const resolvedMongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taxpal';
+console.log('MONGO_URI seen by server:', JSON.stringify(resolvedMongoUri));
+mongoose.connect(resolvedMongoUri)
   .then(async () => {
  
     const User = mongoose.model('User');
