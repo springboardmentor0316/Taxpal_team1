@@ -17,7 +17,7 @@ function App() {
   
   return (
     <BrowserRouter>
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer position="top-right" autoClose={5000} limit={1} newestOnTop closeOnClick />
       <Routes>
         <Route path="/" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />

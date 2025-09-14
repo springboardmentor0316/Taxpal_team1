@@ -1,48 +1,182 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
+import { API_BASE_URL } from "./config";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./Dashboard.css";
 import Income from "./Income.jsx";
 import Expenses from "./Expenses.jsx";
 import logo from "../img/taxpal1.png";
+// Chart colors (Tailwind-like): expanded blue palette derived from provided color
+const COLOR_PRIMARY = "#1D4ED8"; // Primary/600-base
+const COLOR_SKY = "#38BDF8";     // Additional/sky
+const PIE_COLORS = [
+  "#1D4ED8", // blue-700
+  "#2563EB", // blue-600
+  "#3B82F6", // blue-500
+  "#60A5FA", // blue-400
+  "#93C5FD", // blue-300
+  "#BFDBFE", // blue-200
+  "#DBEAFE", // blue-100
+  "#38BDF8", // sky-400
+  "#22D3EE", // cyan-400
+  "#A5F3FC", // cyan-200
+  "#E0F2FE", // sky-100
+  "#BAE6FD"  // sky-200
+];
+// Bar chart sizing
+const BAR_WIDTH = 13; // px
+const BAR_GAP = 5;   // px
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function getCurrentUserKey() {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u?.email ? `transactions:${u.email}` : null;
+  } catch {
+    return null;
+  }
+}
+
 function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("User");
+  const barRef = useRef(null);
+  const [chartHeightPx, setChartHeightPx] = useState(180);
+  const [animateIn, setAnimateIn] = useState(false);
+  const [pieProgress, setPieProgress] = useState(0); 
+  const [chartRange, setChartRange] = useState('this_week'); 
 
-  // modal states
   const [showIncome, setShowIncome] = useState(false);
   const [showExpenses, setShowExpenses] = useState(false);
 
-  // transactions state (persisted in localStorage)
   const [transactions, setTransactions] = useState(() => {
     try {
-      const saved = localStorage.getItem("transactions");
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
+      const cacheKey = getCurrentUserKey();
+      const cached = cacheKey ? localStorage.getItem(cacheKey) : null;
+      return cached ? JSON.parse(cached) : [];
+    } catch {
       return [];
     }
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem("transactions", JSON.stringify(transactions));
-    } catch (e) {}
+    async function fetchTransactions() {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/transactions`, { headers: { ...getAuthHeaders() } });
+        const items = (res.data?.items || []).map((t) => ({ ...t, id: t._id || t.id }));
+        setTransactions(items);
+        try {
+          const cacheKey = getCurrentUserKey();
+          if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(items));
+        } catch {}
+      } catch (err) {
+      }
+    }
+    fetchTransactions();
+  }, []);
+
+  useEffect(() => {
+    function recalc() {
+      const h = barRef.current ? barRef.current.clientHeight : 200;
+      setChartHeightPx(Math.max(100, h - 70));
+    }
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, []);
+
+  useEffect(() => {
+    setAnimateIn(false);
+    const t = setTimeout(() => setAnimateIn(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    setAnimateIn(false);
+    const t = setTimeout(() => setAnimateIn(true), 60);
+    return () => clearTimeout(t);
+  }, [transactions]);
+
+  useEffect(() => {
+    setPieProgress(0);
+    const duration = 900; // ms
+    let rafId;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      setPieProgress(p);
+      if (p < 1) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [transactions]);
 
   const handleAddTransaction = (tx) => {
-    setTransactions((prev) => [{ id: Date.now(), ...tx }, ...prev]);
+    const normalized = { ...tx, id: tx._id || tx.id || String(Date.now()) };
+    setTransactions((prev) => {
+      const next = [normalized, ...prev];
+      try {
+        const cacheKey = getCurrentUserKey();
+        if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   };
 
-  //dark mode
-  // const [darkMode, setDarkMode] = useState(() => {
-  //   const saved = localStorage.getItem("darkMode");
-  //   return saved === "true";
-  // });
+  const totals = useMemo(() => {
+    const income = transactions.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const expenses = transactions.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
+    return { income, expenses };
+  }, [transactions]);
 
-  // useEffect(() => {
-  //   document.documentElement.classList.toggle("dark", darkMode);
-  //   localStorage, setItem("darkMode", String(darkMode));
-  // }, [darkMode]);
+  const { monthTotals, prevMonthTotals } = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const prev = new Date(y, m - 1, 1);
+    const py = prev.getFullYear();
+    const pm = prev.getMonth();
+    let income = 0;
+    let expenses = 0;
+    let pincome = 0;
+    let pexpenses = 0;
+    for (const t of transactions) {
+      if (!t.date) continue;
+      const d = new Date(t.date);
+      if (isNaN(d)) continue;
+      if (d.getFullYear() === y && d.getMonth() === m) {
+        if (t.type === 'income') income += Number(t.amount || 0);
+        else if (t.type === 'expense') expenses += Number(t.amount || 0);
+      } else if (d.getFullYear() === py && d.getMonth() === pm) {
+        if (t.type === 'income') pincome += Number(t.amount || 0);
+        else if (t.type === 'expense') pexpenses += Number(t.amount || 0);
+      }
+    }
+    return { 
+      monthTotals: { income, expenses },
+      prevMonthTotals: { income: pincome, expenses: pexpenses }
+    };
+  }, [transactions]);
+
+  const formatINR = (n) => `₹${Number(n || 0).toFixed(2)}`;
+
+  const expenseBreakdown = useMemo(() => {
+    const byCat = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((map, t) => {
+        const key = (t.category || 'Other').toString();
+        map[key] = (map[key] || 0) + Number(t.amount || 0);
+        return map;
+      }, {});
+    const entries = Object.entries(byCat);
+    const total = entries.reduce((s, [,v]) => s + v, 0);
+    return { entries, total };
+  }, [transactions]);
 
   useEffect(() => {
     const userInfo = localStorage.getItem("user");
@@ -50,7 +184,11 @@ function Dashboard() {
       try {
         const user = JSON.parse(userInfo);
         setUserName(user.name || "User");
-        toast.success(`Welcome back, ${user.name || "User"}!`);
+        const welcomed = sessionStorage.getItem("welcomedOnce");
+        if (!welcomed) {
+          toast.success(`Welcome back, ${user.name || "User"}!`, { toastId: "welcomeOnce" });
+          sessionStorage.setItem("welcomedOnce", "true");
+        }
       } catch (err) {
         console.error("Error parsing user info:", err);
       }
@@ -58,10 +196,56 @@ function Dashboard() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    toast.info("Logged out successfully");
-    navigate("/");
+    const id = "logoutConfirm";
+    if (toast.isActive(id)) return;
+    toast(
+      ({ closeToast }) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
+          <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
+          <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
+          <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
+            <button
+              onClick={() => {
+                closeToast();
+              }}
+              style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                closeToast();
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                toast.info("Logged out successfully", { toastId: "logoutOnce" });
+                navigate("/");
+              }}
+              style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        toastId: id,
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        closeButton: false,
+        hideProgressBar: true,
+        icon: false,
+        style: {
+          width: "360px",
+          margin: "0 auto",
+          textAlign: "center",
+          borderRadius: 12,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+          padding: "16px 20px",
+        },
+      }
+    );
   };
 
   return (
@@ -110,19 +294,19 @@ function Dashboard() {
             >
               <Link to="/budget">
                 <i className="fa-solid fa-money-bill"></i>
-                <span className="text">Budget</span>
+                <span style={{marginLeft: "16px",}} className="text">Budget</span>
               </Link>
             </li>
             <li>
               <Link to="#">
                 <i className="fa-solid fa-money-bill-trend-up"></i>
-                <span className="text">Tax Estimator</span>
+                <span style={{marginLeft: "18px",}}  className="text">Tax Estimator</span>
               </Link>
             </li>
             <li>
               <Link to="#">
                 <i className="fa-solid fa-file"></i>
-                <span className="text">Reports</span>
+                <span style={{marginLeft: "23px",}} className="text">Reports</span>
               </Link>
             </li>
           </ul>
@@ -130,11 +314,11 @@ function Dashboard() {
         <div className="sidebar-bottom">
           <Link to="/setting-page" className="settings-btn">
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
-            <span style={{ marginLeft: "19px" }}>Settings</span>
+            <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
           <div className="dark-mode-toggle">
             <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
-            <span style={{ marginLeft: "21px" }}>Dark Mode</span>
+            <span style={{ marginLeft: "13px" }}>Dark Mode</span>
             <label className="switch">
               <input type="checkbox" />
               <span className="slider"></span>
@@ -163,19 +347,35 @@ function Dashboard() {
           <div className="summary-card income">
             <span>Monthly Income</span>
             <h3>
-              $0.0 <span className="up">↑ 59%</span>
+              {formatINR(monthTotals.income)} {
+                (() => {
+                  const curr = monthTotals.income;
+                  const prev = prevMonthTotals.income || 0;
+                  const change = prev === 0 ? (curr > 0 ? 100 : 0) : ((curr - prev) / prev) * 100;
+                  const up = change >= 0;
+                  return <span className="up">{up ? "↑" : "↓"} {Math.abs(change).toFixed(0)}%</span>;
+                })()
+              }
             </h3>
           </div>
           <div className="summary-card expenses">
-            <span>Monthly Expenses</span>
+            <span>Monthly Expenses </span>
             <h3>
-              $0.0 <span className="down">↓ 59%</span>
+              {formatINR(monthTotals.expenses)} {
+                (() => {
+                  const curr = monthTotals.expenses;
+                  const prev = prevMonthTotals.expenses || 0;
+                  const change = prev === 0 ? (curr > 0 ? 100 : 0) : ((curr - prev) / prev) * 100;
+                  const up = change >= 0;
+                  return <span className="down">{up ? "↑" : "↓"} {Math.abs(change).toFixed(0)}%</span>;
+                })()
+              }
             </h3>
           </div>
           <div className="summary-card tax">
             <span>Estimated tax due</span>
             <h3>
-              $0.00 <span className="down">↓</span>
+              ₹0.00 <span className="down">↓</span>
             </h3>
           </div>
           <div className="summary-card savings">
@@ -190,21 +390,142 @@ function Dashboard() {
           <div className="income-expense-chart">
             <div className="chart-header">
               <span>Income vs Expense</span>
-              <select>
-                <option>This Week</option>
+              <select value={chartRange} onChange={(e) => setChartRange(e.target.value)}>
+                <option value="last_24h">Last 24 Hours</option>
+                <option value="this_week">This Week</option>
+                <option value="end_of_month">End This Month</option>
               </select>
             </div>
-            <div className="bar-chart-placeholder">Bar Chart Here</div>
+            <div ref={barRef} className="bar-chart-placeholder" style={{ position: 'relative', height: '100%', width: '100%', marginTop: "-5px", padding: '6px 10px 34px 46px' }}>
+              {(() => {
+                const fmtDay = new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit' });
+                const map = new Map(); 
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                endOfMonth.setHours(23,59,59,999);
+                const startOfWeek = new Date(now);
+                const day = startOfWeek.getDay();
+                const diffToMonday = (day === 0 ? -6 : 1 - day);
+                startOfWeek.setDate(startOfWeek.getDate() + diffToMonday);
+                startOfWeek.setHours(0,0,0,0);
+                const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+                const isInRange = (dateObj) => {
+                  if (chartRange === 'end_of_month') {
+                    return dateObj >= startOfMonth && dateObj <= endOfMonth;
+                  }
+                  if (chartRange === 'last_24h') {
+                    return dateObj >= twentyFourHoursAgo && dateObj <= now;
+                  }
+                  const endOfWeek = new Date(startOfWeek);
+                  endOfWeek.setDate(endOfWeek.getDate() + 6);
+                  endOfWeek.setHours(23,59,59,999);
+                  return dateObj >= startOfWeek && dateObj <= endOfWeek;
+                };
+
+                for (const t of transactions) {
+                  if (!t.date) continue;
+                  const d = new Date(t.date);
+                  if (isNaN(d)) continue;
+                  if (!isInRange(d)) continue;
+                  const key = d.toISOString().slice(0,10);
+                  const entry = map.get(key) || { income: 0, expense: 0, label: fmtDay.format(d) };
+                  const amt = Number(t.amount || 0);
+                  if (t.type === 'income') entry.income += amt; else if (t.type === 'expense') entry.expense += amt;
+                  map.set(key, entry);
+                }
+                const entries = Array.from(map.entries()).sort(([a],[b]) => a.localeCompare(b));
+                if (entries.length === 0) return null;
+                const maxVal = Math.max(1, ...entries.map(([,e]) => Math.max(e.income, e.expense)));
+                const chartHeight = Math.max(90, chartHeightPx - 80); 
+                const yTicks = 5;
+                const nf = new Intl.NumberFormat('en', { notation: 'compact' });
+                const grid = Array.from({length: yTicks+1}, (_,i) => {
+                  const y = (i / yTicks) * chartHeight;
+                  const val = Math.round(((yTicks - i)/yTicks) * maxVal);
+                  return (
+                    <div key={i} style={{ position: 'absolute', left: 10, right: 0, top: y + 6, height: 1,width :700, background: '#eef3fb' }}>
+                      <span style={{ position: 'absolute', left: 15, top: -9, fontSize: 12, color: '#6b7280' }}>{nf.format(val)}</span>
+                    </div>
+                  );
+                });
+                const DAY_GAP = 28;
+                const PAIR_GAP = 6;
+                const bars = (
+                  <div style={{ position: 'absolute', left: 80, right: 10, bottom:115, display: 'flex', alignItems: 'flex-end', gap: DAY_GAP }}>
+                    {entries.map(([key, e]) => {
+                      const hInc = (e.income / maxVal) * chartHeight;
+                      const hExp = (e.expense / maxVal) * chartHeight;
+                      return (
+                        <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: PAIR_GAP }}>
+                            <div style={{ width: BAR_WIDTH, height: animateIn ? hInc : 0, background: hInc>0?COLOR_PRIMARY:'transparent', borderRadius: hInc>2?6:0, transition: 'height 600ms ease' }} />
+                            <div style={{ width: BAR_WIDTH, height: animateIn ? hExp : 0, background: hExp>0?COLOR_SKY:'transparent', borderRadius: hExp>2?6:0, transition: 'height 600ms ease 80ms' }} />
+                          </div>
+                          <span style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>{e.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+                return (<>{grid}{bars}</>);
+              })()}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 50, marginTop: -110 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 5, background: COLOR_PRIMARY }} />
+                <span style={{ color: '#1f2937', fontWeight: 500 }}>Income</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 5, background: COLOR_SKY }} />
+                <span style={{ color: '#1f2937', fontWeight: 500 }}>Expenses</span>
+              </div>
+            </div>
           </div>
           <div className="expense-breakdown">
             <div className="chart-header">
               <span>Expense Breakdown</span>
             </div>
-            <div className="pie-chart-placeholder">Pie Chart Here</div>
-            <div className="legend">
-              <span className="business">Business: 2300</span>
-              <span className="food">Food: 1500</span>
-              <span className="others">Others: 274</span>
+            <div className="pie-chart-placeholder" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginTop: "80px", transform: animateIn ? 'scale(1)' : 'scale(0.92)', opacity: animateIn ? 1 : 0, transition: 'transform 550ms ease, opacity 550ms ease' }}>
+              {expenseBreakdown.entries.length === 0 ? (
+                <span>No expenses yet</span>
+              ) : (
+                <>
+                  {(() => {
+                    let start = 0;
+                    const segments = expenseBreakdown.entries.map(([cat, val], idx) => {
+                      const pct = expenseBreakdown.total ? (val / expenseBreakdown.total) * 100 : 0;
+                      const end = start + pct * pieProgress; 
+                      const color = PIE_COLORS[idx % PIE_COLORS.length];
+                      const seg = `${color} ${start}% ${end}%`;
+                      start = end;
+                      return seg;
+                    });
+                    const bg = `conic-gradient(${segments.join(',')})`;
+                    return (
+                      <div style={{ position: 'relative', width: 170, height: 170 }}>
+                        <div style={{ width: 170, height: 170, borderRadius: '50%', background: bg, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.06))' }} />
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: 110, height: 110, borderRadius: '50%', background: '#ffffff', border: '6px solid #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#6b7280', fontSize: 12 }}>Total</span>
+                            <span style={{ color: '#111827', fontWeight: 700, fontSize: 22 }}>{Math.round(expenseBreakdown.total)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
+                    {expenseBreakdown.entries.map(([cat, val], idx) => (
+                      <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: 5, background: PIE_COLORS[idx % PIE_COLORS.length] }} />
+                        <span style={{ color: '#6b7280', fontWeight: 600 }}>{cat} :</span>
+                        <span style={{ color: '#111827', fontWeight: 700 }}>{Math.round(val)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -227,12 +548,12 @@ function Dashboard() {
                 </tr>
               ) : (
                 transactions.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.date}</td>
+                  <tr key={t.id || t._id}>
+                    <td>{t.date ? new Date(t.date).toLocaleDateString() : ''}</td>
                     <td>{t.description}</td>
                     <td>{t.category}</td>
                     <td style={{ color: t.type === "income" ? "#34cc85" : "#e25454" }}>
-                      {t.type === "income" ? "+" : "-"}${Number(t.amount).toFixed(2)}
+                      {t.type === "income" ? "+" : "-"}₹{Number(t.amount).toFixed(2)}
                     </td>
                   </tr>
                 ))
@@ -241,8 +562,7 @@ function Dashboard() {
           </table>
         </div>
       </div>
-
-      {/* MODALS */}
+      
       {showIncome && (
         <div className="modal-overlay">
           <Income

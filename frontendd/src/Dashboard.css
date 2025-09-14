@@ -181,12 +181,16 @@ body {
   gap: 10px;
   border: none;
 }
+.dark-mode-toggle{
+  height: 3vh;
+}
 .settings-btn:hover {
   background: #f6faff;
 }
 
 .switch {
-  margin-left: 40px;
+  margin-left: 48px;
+  margin-top: 16px;
   position: relative;
   display: inline-block;
   width: 31px;
@@ -234,7 +238,7 @@ body {
   background: transparent;
   min-height: 100vh;
   box-sizing: border-box;
-  margin-left: 257px; /* to clear the fixed sidebar */
+  margin-left: 257px; 
   
 }
 @media (max-width: 900px) {
@@ -299,7 +303,9 @@ body {
   min-height: 17vh;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .summary-card span {
   font-size: 1.07rem;
@@ -315,6 +321,7 @@ body {
   color: #161d38;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 .summary-card .up {
   color: #34cc85;
@@ -342,7 +349,7 @@ body {
   padding: 24px 18px;
   flex: 2;
   min-width: 300px;
-  height: 33vh;
+  height: 47vh;
 }
 .expense-breakdown {
   flex: 1.1;
@@ -361,7 +368,7 @@ body {
 }
 .bar-chart-placeholder,
 .pie-chart-placeholder {
-  background: #eaf1fa;
+  
   height: 134px;
   border-radius: 10px;
   display: flex;

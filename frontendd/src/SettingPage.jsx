@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { User, Tag, Bell, Lock, SquarePen, X } from "lucide-react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import logo from "../img/taxpal1.png";
+import { toast } from "react-toastify";
 
 function Settings() {
-  const [categories, setCategories] = useState([
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("expense"); 
+  const [expenseCategories, setExpenseCategories] = useState([
     { color: "red", name: "Travel" },
     { color: "blue", name: "Marketing" },
     { color: "purple", name: "Software Subscription" },
@@ -14,6 +17,12 @@ function Settings() {
     { color: "gold", name: "Utilities" },
     { color: "gray", name: "Business Expenses" },
   ]);
+  const [incomeCategories, setIncomeCategories] = useState([
+    { color: "green", name: "Salary" },
+    { color: "teal", name: "Freelance" },
+    { color: "#10b981", name: "Investments" },
+    { color: "#22c55e", name: "Interest" },
+  ]);
 
   const handleAddCategory = () => {
     const name = window.prompt("Enter new category name");
@@ -22,24 +31,41 @@ function Settings() {
       "Enter color (CSS name or hex, e.g. #10b981)",
       "gray"
     ) || "gray";
-    setCategories(prev => [...prev, { name: name.trim(), color }]);
+    if (activeTab === "expense") {
+      setExpenseCategories(prev => [...prev, { name: name.trim(), color }]);
+    } else {
+      setIncomeCategories(prev => [...prev, { name: name.trim(), color }]);
+    }
   };
 
   const handleEditCategory = (index) => {
-    const current = categories[index];
+    const list = activeTab === "expense" ? expenseCategories : incomeCategories;
+    const current = list[index];
     const name = window.prompt("Edit category name", current.name);
     if (!name || !name.trim()) return;
     const color = window.prompt("Edit color", current.color) || current.color;
-    setCategories(prev => {
-      const next = [...prev];
-      next[index] = { name: name.trim(), color };
-      return next;
-    });
+    if (activeTab === "expense") {
+      setExpenseCategories(prev => {
+        const next = [...prev];
+        next[index] = { name: name.trim(), color };
+        return next;
+      });
+    } else {
+      setIncomeCategories(prev => {
+        const next = [...prev];
+        next[index] = { name: name.trim(), color };
+        return next;
+      });
+    }
   };
 
   const handleDeleteCategory = (index) => {
     if (!window.confirm("Delete this category?")) return;
-    setCategories(prev => prev.filter((_, i) => i !== index));
+    if (activeTab === "expense") {
+      setExpenseCategories(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setIncomeCategories(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   return (
@@ -57,7 +83,26 @@ function Settings() {
             alt="User Profile"
             className="avatar"
           />
-          <button className="logout-btn">Logout</button>
+          <button
+            className="logout-btn"
+            onClick={() => {
+              const id = "logoutConfirm";
+              if (toast.isActive(id)) return;
+              toast(({ closeToast }) => (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
+                  <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
+                  <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
+                    <button onClick={() => { closeToast(); }} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}>Cancel</button>
+                    <button onClick={() => { closeToast(); localStorage.removeItem("token"); localStorage.removeItem("user"); toast.info("Logged out successfully", { toastId: "logoutOnce" }); navigate("/"); }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
+                  </div>
+                </div>
+              ), { toastId: id, position: "top-center", autoClose: false, closeOnClick: false, draggable: false, closeButton: false, hideProgressBar: true, icon: false, style: { width: "360px", margin: "0 auto", textAlign: "center", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", padding: "16px 20px" } });
+              
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
@@ -86,19 +131,19 @@ function Settings() {
             >
               <Link to="/budget">
                 <i className="fa-solid fa-money-bill"></i>
-                <span className="text">Budget</span>
+                <span style={{marginLeft: "16px",}} className="text">Budget</span>
               </Link>
             </li>
             <li>
               <Link to="#">
                 <i className="fa-solid fa-money-bill-trend-up"></i>
-                <span className="text">Tax Estimator</span>
+                <span style={{marginLeft: "18px",}} className="text">Tax Estimator</span>
               </Link>
             </li>
             <li>
               <Link to="#">
                 <i className="fa-solid fa-file"></i>
-                <span className="text">Reports</span>
+                <span style={{marginLeft: "23px",}} className="text">Reports</span>
               </Link>
             </li>
           </ul>
@@ -106,11 +151,11 @@ function Settings() {
         <div className="sidebar-bottom">
           <button className="settings-btn">
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
-            <span style={{ marginLeft: "19px" }}>Settings</span>
+            <span style={{ marginLeft: "4px" }}>Settings</span>
           </button>
           <div className="dark-mode-toggle">
             <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
-            <span style={{ marginLeft: "21px" }}>Dark Mode</span>
+            <span style={{ marginLeft: "13px" }}>Dark Mode</span>
             <label className="switch">
               <input type="checkbox" />
               <span className="slider"></span>
@@ -219,25 +264,29 @@ function Settings() {
             {/* Tabs */}
             <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
               <button
+                onClick={() => setActiveTab("expense")}
                 style={{
-                  border: "1px solid black",
+                  border: activeTab === "expense" ? "1px solid black" : "1px solid transparent",
                   padding: "5px 15px",
                   borderRadius: "4px",
                   fontWeight: "bold",
-                  background: "white",
+                  background: activeTab === "expense" ? "white" : "transparent",
                   cursor: "pointer",
                 }}
               >
                 Expense Categories
               </button>
               <button
+                onClick={() => setActiveTab("income")}
                 style={{
-                  border: "none",
-                  background: "transparent",
+                  border: activeTab === "income" ? "1px solid black" : "1px solid transparent",
+                  background: activeTab === "income" ? "white" : "transparent",
                   cursor: "pointer",
                   color: "black",
                   fontSize: "16px",
-                  padding: "5px 0",
+                  padding: "5px 15px",
+                  borderRadius: "4px",
+                  fontWeight: "bold",
                 }}
               >
                 Income Categories
@@ -246,7 +295,7 @@ function Settings() {
 
             {/* Categories List */}
             <ul style={{ listStyle: "none", padding: 0, margin: 0, flex: 1 }}>
-              {categories.map((cat, idx) => (
+              {(activeTab === "expense" ? expenseCategories : incomeCategories).map((cat, idx) => (
                 <li
                   key={idx}
                   style={{

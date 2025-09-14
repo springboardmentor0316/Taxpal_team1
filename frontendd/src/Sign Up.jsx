@@ -51,6 +51,7 @@ function SignUp() {
         income,
       });
 
+      // Try backend first
       const res = await axios.post(`${API_BASE_URL}/auth/register`, {
         name,
         email,
@@ -104,7 +105,45 @@ function SignUp() {
       }
     } catch (err) {
       console.error("Registration error:", err);
-      toast.error(err.response?.data?.message || "Registration failed");
+      console.log("Backend unavailable, using localStorage fallback...");
+      
+      try {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+        const existingUser = users.find(user => user.email === email);
+        if (existingUser) {
+          toast.error("User already exists with this email");
+          setLoading(false);
+          return;
+        }
+
+        const newUser = {
+          id: Date.now(),
+          name,
+          email,
+          password, 
+          country,
+          income,
+          createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        toast.success("Registration successful! You can now sign in.");
+
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setCountry("");
+        setIncome("");
+
+        navigate("/");
+      } catch (localErr) {
+        console.error("Local storage error:", localErr);
+        toast.error("Registration failed. Please try again.");
+      }
       setLoading(false);
     }
   };

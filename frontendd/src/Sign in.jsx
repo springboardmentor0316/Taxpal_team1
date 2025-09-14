@@ -22,7 +22,7 @@ function SignIn() {
 
       console.log("Login response:", res.data);
 
-      toast.success(res.data.message || "Login successful");
+      toast.success(res.data.message || "Login successful", { toastId: "loginSuccess" });
 
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
@@ -35,8 +35,38 @@ function SignIn() {
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
-      toast.error(err.response?.data?.message || "Login failed");
-      setLoading(false);
+      console.log("Backend unavailable, using localStorage fallback...");
+      
+      // Fallback to localStorage if backend fails
+      try {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const user = users.find(u => u.email === email && u.password === password);
+        
+        if (user) {
+          // Create a mock token and user object
+          const mockToken = 'local_' + Date.now();
+          const userData = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            country: user.country,
+            income: user.income
+          };
+          
+          localStorage.setItem("token", mockToken);
+          localStorage.setItem("user", JSON.stringify(userData));
+          
+          toast.success("Login successful!", { toastId: "loginSuccess" });
+          navigate("/dashboard");
+        } else {
+          toast.error("Invalid email or password", { toastId: "invalidCreds" });
+          setLoading(false);
+        }
+      } catch (localErr) {
+        console.error("Local storage error:", localErr);
+        toast.error("Login failed. Please try again.", { toastId: "loginFailed" });
+        setLoading(false);
+      }
     }
   };
 
@@ -101,11 +131,11 @@ function SignIn() {
                 color: "#333",
               }}
             >
-              Username:
+              Email or Username:
             </label>
             <input
               type="text"
-              placeholder="Username"
+              placeholder="Email or Username"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -154,18 +184,17 @@ function SignIn() {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
             <div className="inline">
-              <a
+              <Link
+                to="/reset-password"
                 style={{
                   color: "#207ED0",
                   fontSize: "16px",
                   textDecoration: "none",
-                  marginLeft: "65%",
+                  marginLeft: "70%",
                 }}
-                id="f"
-                href="/reset-password"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
           </div>
           <button

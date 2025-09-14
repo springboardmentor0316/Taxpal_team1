@@ -1,4 +1,11 @@
 import "./Dashboard.css";
+import axios from "axios";
+import { API_BASE_URL } from "./config";
+
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 function Expenses({ onClose, onSave }) {
   return (
@@ -15,7 +22,7 @@ function Expenses({ onClose, onSave }) {
             Add details about your expenses to track your finance
           </p>
 
-          <form onSubmit={(e) => {
+          <form onSubmit={async (e) => {
             e.preventDefault();
             const form = e.currentTarget;
             const description = form.querySelector('input[name="description"]').value.trim();
@@ -24,7 +31,20 @@ function Expenses({ onClose, onSave }) {
             const date = form.querySelector('input[name="date"]').value;
             const notes = form.querySelector('textarea[name="notes"]').value.trim();
             if (!description || !amount || !category || !date) return;
-            onSave && onSave({ description, amount: parseFloat(amount), category, date, notes });
+
+            try {
+              const res = await axios.post(
+                `${API_BASE_URL}/transactions`,
+                { type: "expense", description, amount: parseFloat(amount), category, date, notes },
+                { headers: { ...getAuthHeaders() } }
+              );
+              const item = res.data?.item || { description, amount: parseFloat(amount), category, date, notes, type: "expense" };
+              onSave && onSave(item);
+              onClose && onClose();
+            } catch (err) {
+              onSave && onSave({ description, amount: parseFloat(amount), category, date, notes, type: "expense" });
+              onClose && onClose();
+            }
           }}>
             <h3>Add Expenses</h3>
             <div className="form-row-expin">
