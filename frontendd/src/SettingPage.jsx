@@ -89,7 +89,7 @@ function Settings() {
               const id = "logoutConfirm";
               if (toast.isActive(id)) return;
               toast(({ closeToast }) => (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center", marginLeft: "60px"}}>
                   <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
                   <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
                   <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>

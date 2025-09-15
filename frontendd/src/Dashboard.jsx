@@ -200,7 +200,7 @@ function Dashboard() {
     if (toast.isActive(id)) return;
     toast(
       ({ closeToast }) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center", marginLeft: "60px" }}>
           <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
           <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
           <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
@@ -208,7 +208,7 @@ function Dashboard() {
               onClick={() => {
                 closeToast();
               }}
-              style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}
+              style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer", marginleft: "67px" }}
             >
               Cancel
             </button>
@@ -220,7 +220,7 @@ function Dashboard() {
                 toast.info("Logged out successfully", { toastId: "logoutOnce" });
                 navigate("/");
               }}
-              style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}
+              style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600, marginleft: "67px" }}
             >
               Confirm
             </button>
