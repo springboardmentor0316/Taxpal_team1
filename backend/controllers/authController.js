@@ -1,10 +1,16 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import 'dotenv/config';
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 const JWT_SECRET = process.env.JWT_SECRET || 'taxpal_default_secret_key';
+const FROM_NAME = process.env.EMAIL_FROM_NAME || 'TaxPal Support';
 const CLIENT_URL = process.env.CLIENT_URL;
 let transporter;
+const IS_TEST_MODE = !(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 console.log(' Setting up email transport...');
 console.log(' Checking email configuration...');
 console.log(' .env file loaded properly:', process.env.EMAIL_USER ? 'Yes' : 'No');
@@ -68,8 +74,11 @@ initializeEmailTransport().then(account => {
   testAccount = account;
 });
 async function sendOTP(email, otp, name = '') {
+  const fromAddress = process.env.EMAIL_USER
+    ? `"${FROM_NAME}" <${process.env.EMAIL_USER}>`
+    : `"${FROM_NAME}" <verification@taxpal.com>`;
   const mailOptions = {
-    from: `"TaxPal Support" <verification@taxpal.com>`,
+    from: fromAddress,
     to: email,
     subject: 'TaxPal - Verify Your Email Address',
     html: `
@@ -159,19 +168,31 @@ export const register = async (req, res) => {
           emailPreview: previewUrl 
         });
       } else {
+        if (IS_TEST_MODE) {
+          return res.status(201).json({ 
+            success: true,
+            message: 'Registered! Test mode: use this OTP code: ' + otp,
+            testOtp: otp 
+          });
+        }
         return res.status(201).json({ 
           success: true,
-          message: 'Registered! Check your email for OTP or use code: ' + otp,
-          testOtp: otp 
+          message: 'Registered! Check your email for the OTP to verify your account.'
         });
       }
     } catch (emailError) {
       console.error('Error sending OTP email:', emailError);
       console.log('⚠️ Email sending failed, but registration continues. Using test OTP mode.');
-      return res.status(201).json({ 
-        success: true,
-        message: 'Registered! Email failed but you can use this code: ' + otp,
-        testOtp: otp 
+      if (IS_TEST_MODE) {
+        return res.status(201).json({ 
+          success: true,
+          message: 'Registered! Test mode: use this OTP code: ' + otp,
+          testOtp: otp 
+        });
+      }
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to send OTP email. Please try again later.'
       });
     }
   } catch (err) {
@@ -252,24 +273,31 @@ export const verifyOtp = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('Login attempt:', email);
+    const identifier = email; 
+    console.log('Login attempt:', identifier);
     
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [
+        { email: identifier },
+        { name: identifier }
+      ]
+    });
     if (!user) {
-      console.log('User not found:', email);
+      console.log('User not found by email or username:', identifier);
       return res.status(400).json({ 
         success: false,
         message: 'User not found' 
       });
     }
     if (!user.isVerified) {
-      console.log('Auto-verifying user for development:', email);
-      user.isVerified = true;
-      await user.save();
+      return res.status(400).json({ 
+        success: false,
+        message: 'Please verify your email via the OTP sent to your inbox' 
+      });
     }
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      console.log('Invalid password for user:', email);
+      console.log('Invalid password for user:', identifier);
       return res.status(400).json({ 
         success: false,
         message: 'Invalid credentials' 
@@ -320,15 +348,27 @@ export const sendResetOtp = async (req, res) => {
           emailPreview: previewUrl
         });
       } else {
-        res.json({ message: 'OTP sent to email' });
+        if (IS_TEST_MODE) {
+          res.json({ 
+            success: true,
+            message: 'Test mode: use this OTP code: ' + otp,
+            testOtp: otp
+          });
+        } else {
+          res.json({ success: true, message: 'OTP sent to email' });
+        }
       }
     } catch (emailError) {
       console.error('Error sending reset OTP email:', emailError);
-      res.json({ 
-        success: true,
-        message: 'OTP generated. Use code: ' + otp,
-        testOtp: otp
-      });
+      if (IS_TEST_MODE) {
+        res.json({ 
+          success: true,
+          message: 'Test mode: use this OTP code: ' + otp,
+          testOtp: otp
+        });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to send OTP email' });
+      }
     }
   } catch (err) {
     res.status(500).json({ message: 'Failed to send OTP', error: err.message });
@@ -374,15 +414,25 @@ export const resendOtp = async (req, res) => {
           emailPreview: previewUrl 
         });
       } else {
-        return res.json({ message: 'OTP resent. Check your email' });
+        if (IS_TEST_MODE) {
+          return res.json({ 
+            success: true,
+            message: 'Test mode: use this OTP code: ' + otp,
+            testOtp: otp 
+          });
+        }
+        return res.json({ success: true, message: 'OTP resent. Check your email' });
       }
     } catch (emailError) {
       console.error('Error resending OTP email:', emailError);
-      return res.json({ 
-        success: true,
-        message: 'OTP resent. Use this code: ' + otp,
-        testOtp: otp 
-      });
+      if (IS_TEST_MODE) {
+        return res.json({ 
+          success: true,
+          message: 'Test mode: use this OTP code: ' + otp,
+          testOtp: otp 
+        });
+      }
+      return res.status(500).json({ success: false, message: 'Failed to resend OTP email' });
     }
   } catch (err) {
     console.error('Resend OTP error:', err);

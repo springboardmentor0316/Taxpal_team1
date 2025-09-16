@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "./config";
 
 function ResetPassword() {
   const [email, setEmail] = useState("");
@@ -11,8 +12,10 @@ function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/send-reset-otp", { email });
-      toast.success(res.data.message || "OTP sent to your email");
+      const res = await axios.post(`${API_BASE_URL}/auth/send-reset-otp`, { email });
+      const message = res.data.message || "OTP sent to your email";
+      toast.success(message);
+
       navigate("/set-new-password", { state: { email } });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to send OTP");
@@ -36,20 +39,21 @@ function ResetPassword() {
         onSubmit={handleSubmit}
         style={{
           backgroundColor: "white",
-          padding: "30px",
-          marginRight: "98px",
-          borderRadius: "40px",
-          boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
-          width: "420px",
-          height: "425px",
+            padding: "30px",
+            marginRight: "98px",
+            borderRadius: "40px",
+            boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
+            width: "420px",
+            height: "405px",
+            marginTop: "17%",
         }}
       >
         <h2
           style={{ 
-            marginBottom: "14px", 
+            marginBottom: "19px", 
             textAlign: "left", 
             color: "#333",
-            marginTop: "95px",
+            marginTop: "75px",
           }}
         >
           Reset your Password
@@ -58,10 +62,9 @@ function ResetPassword() {
         <p
           style={{
             fontSize: "14px",
-            marginTop: "5px",
             color: "#555",
             marginBottom: "1px",
-            marginTop: "-14px",
+            marginTop: "-13px",
             textAlign: "left",
           }}
         >
@@ -74,7 +77,7 @@ function ResetPassword() {
             htmlFor="email"
             style={{
              display: "block",
-              marginTop: "2px",
+              marginTop: "9px",
               marginBottom: "5px",
               marginLeft:"2px",
               fontSize: "16px",

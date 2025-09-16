@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "./config";
+import { useLocation } from "react-router-dom";
 
 function OtpInput() {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [email, setEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailParam = params.get("email");
+    const testOtp = params.get("testOtp");
+    if (emailParam) setEmail(emailParam);
+    if (testOtp && testOtp.length === 6) {
+      setOtp(testOtp.split(""));
+    }
+  }, [location]);
 
   const handleChange = (element, index) => {
     if (isNaN(element.value)) return; 
@@ -25,13 +39,37 @@ function OtpInput() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/verify-otp", {
+      const res = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
         email,
         otp: otp.join("")
       });
       toast.success(res.data.message || "OTP verified!");
     } catch (err) {
       toast.error(err.response?.data?.message || "OTP verification failed");
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      toast.error("Please enter your email to resend OTP");
+      return;
+    }
+    try {
+      setResendLoading(true);
+      const res = await axios.post(`${API_BASE_URL}/auth/resend-otp`, { email });
+      if (res.data.emailPreview) {
+        toast.info("OTP resent. Check the test email preview link in console.");
+        if (res.data.emailPreview) console.log("Ethereal preview:", res.data.emailPreview);
+      } else {
+        toast.success(res.data.message || "OTP resent successfully");
+      }
+      if (res.data.testOtp) {
+        setOtp(res.data.testOtp.split(""));
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -57,9 +95,27 @@ function OtpInput() {
           borderRadius: "40px",
           boxShadow: "10px 10px 5px rgba(170, 168, 168, 0.5)",
           width: "420px",
-          height: "425px",
+          height: "405px",
+          marginTop: "17%",
         }}
       >
+          <div style={{ marginBottom: "10px" }}>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14, color: "#333" }}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              style={{
+                width: "93%",
+                padding: "10px",
+                borderRadius: "14px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+              required
+            />
+          </div>
           <h3 style={{ marginBottom: "20px",  textAlign: "center",color: "#333", marginTop: "90px", }}>Enter Your OTP</h3>
            <p
           style={{
@@ -112,7 +168,9 @@ function OtpInput() {
 
           <p style={{ marginTop: "90px",  textAlign: "center",fontSize: "15px", color: "#555" }}>
             Didn’t receive an OTP?{" "}
-            <span style={{ color: "#207ED0", cursor: "pointer" }}>Resend</span>
+            <span onClick={resendLoading ? undefined : handleResend} style={{ color: resendLoading ? "#6ca2d9" : "#207ED0", cursor: resendLoading ? "not-allowed" : "pointer" }}>
+              {resendLoading ? "Resending..." : "Resend"}
+            </span>
           </p>
         </form>
       </div>
