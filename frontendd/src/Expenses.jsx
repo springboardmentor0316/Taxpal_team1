@@ -1,6 +1,7 @@
 import "./Dashboard.css";
 import axios from "axios";
 import { API_BASE_URL } from "./config";
+import { useState, useEffect } from "react";
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
@@ -8,6 +9,21 @@ function getAuthHeaders() {
 }
 
 function Expenses({ onClose, onSave }) {
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    // Load expense categories from localStorage
+    const savedCategories = localStorage.getItem('expenseCategories');
+    if (savedCategories) {
+      try {
+        const parsedCategories = JSON.parse(savedCategories);
+        setCategories(parsedCategories);
+      } catch (e) {
+        console.error('Error parsing expense categories:', e);
+      }
+    }
+  }, []);
+
   return (
     <div>
       <div className="body-expin">
@@ -27,7 +43,7 @@ function Expenses({ onClose, onSave }) {
             const form = e.currentTarget;
             const description = form.querySelector('input[name="description"]').value.trim();
             const amount = form.querySelector('input[name="amount"]').value.trim();
-            const category = form.querySelector('input[name="category"]').value.trim();
+            const category = form.querySelector('select[name="category"]').value;
             const date = form.querySelector('input[name="date"]').value;
             const notes = form.querySelector('textarea[name="notes"]').value.trim();
             if (!description || !amount || !category || !date) return;
@@ -81,13 +97,31 @@ function Expenses({ onClose, onSave }) {
                   style={{
                     fontSize: "15px",
                     marginBottom: "5px",
-                    marginTop: "-20px",
+                    marginTop: "-15px",
                     fontWeight: "600",
                   }}
                 >
                   Category
                 </label>
-                <input name="category" type="text" placeholder="e.g food, utilities" />
+                <select 
+                  name="category" 
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "20px",
+                    fontSize: "14px",
+                    background: "#fff"
+                  }}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((cat, index) => (
+                    <option key={index} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label

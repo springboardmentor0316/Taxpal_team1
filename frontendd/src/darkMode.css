@@ -1,0 +1,128 @@
+/* Dark Mode Styles - Only color changes */
+body.dark-mode {
+  background: linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%) fixed;
+  color: #fff;
+  background-attachment: fixed;
+}
+
+/* Container colors */
+.dark-mode .dashboard-container,
+.dark-mode .budget-container,
+.dark-mode .settings-container,
+.dark-mode .tax-estimator-container {
+  background: transparent;
+}
+
+/* Content area colors */
+.dark-mode .dashboard-content,
+.dark-mode .budget-content,
+.dark-mode .settings-content,
+.dark-mode .tax-estimator-content {
+  background: linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%) fixed;
+}
+
+/* Navbar Dark Mode */
+.dark-mode .navbar {
+  background: rgba(137, 136, 136, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Sidebar Dark Mode */
+.dark-mode .sidebar {
+  background: rgba(137, 136, 136, 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.dark-mode .nav-menu ul li a {
+  color: #fff;
+}
+
+.dark-mode .nav-menu ul li.active {
+  background: rgba(137, 136, 136, 0.37);
+}
+
+.dark-mode .nav-menu ul li:hover {
+  background: rgba(137, 136, 136, 0.25);
+}
+
+/* Cards Dark Mode - Only colors */
+.dark-mode .summary-card,
+.dark-mode .income-expense-chart,
+.dark-mode .expense-breakdown,
+.dark-mode .transactions-panel,
+.dark-mode .budget-card,
+.dark-mode .settings-card,
+.dark-mode .tax-card {
+  background: rgba(137, 136, 136, 0.37);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Text Colors */
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6,
+.dark-mode p,
+.dark-mode span,
+.dark-mode label,
+.dark-mode .text {
+  color: #fff;
+}
+
+/* Menu Title */
+.dark-mode .menu-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Settings Button */
+.dark-mode .settings-btn {
+  color: #fff;
+  background: rgba(137, 136, 136, 0.37);
+}
+
+/* Dark Mode Toggle */
+.dark-mode .dark-mode-toggle {
+  background: rgba(137, 136, 136, 0.37)
+}
+
+/* Table Dark Mode */
+.dark-mode table {
+  color: #fff;
+}
+
+.dark-mode table th {
+  background: rgba(137, 136, 136, 0.25);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode table td {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Chart Labels */
+.dark-mode .chart-header {
+  color: #fff;
+}
+
+/* Inputs and Selects */
+.dark-mode input,
+.dark-mode select {
+  background: rgba(137, 136, 136, 0.25);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Buttons */
+.dark-mode button {
+  background: rgba(137, 136, 136, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode button:hover {
+  background: rgba(137, 136, 136, 0.5);
+}

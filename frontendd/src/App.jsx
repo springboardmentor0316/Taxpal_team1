@@ -12,6 +12,7 @@ import SetNewPassword from "./SetNewPassword.jsx";
 import Budget from "./BudgetSet.jsx"
 import SettingPage from "./SettingPage.jsx"
 import "./App.css";
+import TaxEstimator from "./TaxEstimator.jsx";
 
 function App() {
   
@@ -26,6 +27,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/setting-page" element={<SettingPage />} />
         <Route path="/budget" element={<Budget />} />
+        <Route path="/tax-estimator" element={<TaxEstimator />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
       </Routes>

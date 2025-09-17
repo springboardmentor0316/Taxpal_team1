@@ -2,14 +2,45 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import "./Dashboard.css";
+import "./darkMode.css";
 import logo from "../img/taxpal1.png";
 
 function Budget() {
   const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
+    document.body.classList.toggle('dark-mode');
+  };
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [darkMode]);
   const [month, setMonth] = useState("May, 2025");
   const [description, setDescription] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    // Load expense categories from localStorage since budgets are for expenses
+    const savedCategories = localStorage.getItem('expenseCategories');
+    if (savedCategories) {
+      try {
+        const parsedCategories = JSON.parse(savedCategories);
+        setCategories(parsedCategories);
+      } catch (e) {
+        console.error('Error parsing expense categories:', e);
+      }
+    }
+  }, []);
 
   const [budgets, setBudgets] = useState(() => {
     try {
@@ -42,7 +73,26 @@ function Budget() {
 
   const handleCreateBudget = (e) => {
     e.preventDefault();
-    if (!category.trim() || !amount || !month.trim()) return;
+    if (!category.trim()) {
+      toast.warning("Please enter a category");
+      return;
+    }
+    if (/\d/.test(category)) {
+    toast.error("Category should not contain numbers");
+    return;
+  }
+  if (isNaN(amount) || Number(amount) <= 0) {
+    toast.error("Budget amount must be a valid number greater than 0");
+    return;
+  }
+    if (!amount) {
+      toast.warning("Please enter a budget amount");
+      return;
+    }
+    if (!month.trim()) {
+      toast.warning("Please enter a month");
+      return;
+    }
     const entry = {
       id: Date.now(),
       category: category.trim(),
@@ -86,8 +136,15 @@ function Budget() {
   };
 
   return (
-    <div>
-      <div className="navbar">
+    <div className={`budget-container ${darkMode ? 'dark-mode' : ''}`} style={{
+      background: darkMode ? 'linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%)' : '',
+      minHeight: '100vh',
+      color: darkMode ? '#fff' : 'inherit'
+    }}>
+      <div className="navbar" style={{
+        background: darkMode ? 'rgba(137, 136, 136, 0.15)' : '',
+        borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : ''
+      }}>
         <div className="brand">
           <img src={logo} alt="Taxpal Logo" />
           <span className="tagline">Your trusted tax partner</span>
@@ -215,10 +272,10 @@ function Budget() {
               </span>
             </li>
             <li>
-              <i className="fa-solid fa-money-bill-trend-up"></i>
-              <span style={{ marginLeft: "18px" }} className="text">
-                Tax Estimator
-              </span>
+              <Link to="/tax-estimator">
+                <i className="fa-solid fa-money-bill-trend-up"></i>
+                <span className="text">Tax Estimator</span>
+              </Link>
             </li>
             <li>
               <i className="fa-solid fa-file"></i>
@@ -233,30 +290,51 @@ function Budget() {
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
-          <div className="dark-mode-toggle">
-            <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
-            <span style={{ marginLeft: "13px" }}>Dark Mode</span>
+          <div className="dark-mode-toggle" style={{
+            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
+            color: darkMode ? '#fff' : 'inherit'
+          }}>
+            <i style={{ width: "20px", color: darkMode ? '#fff' : 'inherit' }} className="fa-solid fa-moon"></i>
+            <span style={{ marginLeft: "13px", color: darkMode ? '#fff' : 'inherit' }}>Dark Mode</span>
             <label className="switch">
-              <input type="checkbox" />
+              <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
               <span className="slider"></span>
             </label>
           </div>
         </div>
       </div>
-      <div className="modal">
-        <h2>Create New Budget</h2>
+      <div className="modal" style={{
+        background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
+        color: darkMode ? '#fff' : 'inherit',
+        border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '',
+      }}>
+        <h2 style={{ color: darkMode ? '#fff' : 'inherit' }}>Create New Budget</h2>
 
         <form onSubmit={handleCreateBudget}>
           <div className="form-row">
             <div className="form-group">
               <label style={{ marginLeft: "30px" }}>Category</label>
-              <input
-                style={{ width: "87%", marginLeft: "30px" }}
-                type="text"
-                placeholder="e.g Food"
+              <select
+                style={{ 
+                  width: "91%", 
+                  marginLeft: "30px", 
+                  padding: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                  background: "#fff"
+                }}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-              />
+                required
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat, index) => (
+                  <option key={index} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label style={{ marginLeft: "40px" }}>Budget Amount</label>
@@ -274,7 +352,7 @@ function Budget() {
           <div className="form-group">
             <label style={{ marginLeft: "30px" }}>Month</label>
             <input
-              style={{ width: "43.4%", marginLeft: "30px" }}
+              style={{ width: "43.4%", marginLeft: "30px", border: "1px solid #ccc", borderRadius: "20px", }}
               type="text"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
