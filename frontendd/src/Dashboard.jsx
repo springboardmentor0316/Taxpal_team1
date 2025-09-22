@@ -319,6 +319,7 @@ function Dashboard() {
   return (
     <div className={`dashboard-container ${darkMode ? 'dark-mode' : ''}`} style={{
       background: darkMode ? 'linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%)' : '',
+      minHeight: '100vh',
       color: darkMode ? '#fff' : 'inherit'
     }}>
       <div className="navbar" style={{
@@ -401,7 +402,10 @@ function Dashboard() {
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
-          <div className="dark-mode-toggle">
+          <div className="dark-mode-toggle" style={{
+            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
+            color: darkMode ? '#fff' : 'inherit'
+          }}>
             <i style={{ width: "20px", color: darkMode ? '#fff' : 'inherit' }} className="fa-solid fa-moon"></i>
             <span style={{ marginLeft: "13px", color: darkMode ? '#fff' : 'inherit' }}>Dark Mode</span>
             <label className="switch">
