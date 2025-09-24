@@ -44,6 +44,35 @@ function getCurrentUserKey() {
   }
 }
 
+const easeOutQuad = t => t * (2 - t);
+
+function AnimatedNumber({ value, duration = 1000 }) {
+  const [currentValue, setCurrentValue] = useState(0);
+
+  useEffect(() => {
+    const startValue = currentValue;
+    const endValue = value;
+    const startTime = performance.now();
+
+    const animateValue = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+      const easedProgress = easeOutQuad(progress);
+      const nextValue = startValue + (endValue - startValue) * easedProgress;
+
+      setCurrentValue(nextValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(animateValue);
+      }
+    };
+
+    requestAnimationFrame(animateValue);
+  }, [value, duration]);
+
+  return Math.round(currentValue);
+}
+
 function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("User");
@@ -56,6 +85,34 @@ function Dashboard() {
 
   const [showIncome, setShowIncome] = useState(false);
   const [showExpenses, setShowExpenses] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  const menuItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
+    { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
+    { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
+    { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
+    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
+  ];
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    if (value.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+
+    const filtered = menuItems.filter(item =>
+      item.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setSearchResults(filtered);
+  };
 
   // Handle dark mode toggle
   const toggleDarkMode = () => {
@@ -225,6 +282,11 @@ function Dashboard() {
     }
   }, []);
 
+  const handleNotificationClick = (index) => {
+    const updatedNotifications = notifications.filter((_, i) => i !== index);
+    setNotifications(updatedNotifications);
+  };
+
   const handleLogout = () => {
     const id = "logoutConfirm";
     if (toast.isActive(id)) return;
@@ -319,7 +381,6 @@ function Dashboard() {
   return (
     <div className={`dashboard-container ${darkMode ? 'dark-mode' : ''}`} style={{
       background: darkMode ? 'linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%)' : '',
-      minHeight: '100vh',
       color: darkMode ? '#fff' : 'inherit'
     }}>
       <div className="navbar" style={{
@@ -332,14 +393,140 @@ function Dashboard() {
           <span className="tagline" style={{ color: darkMode ? '#fff' : 'inherit' }}>Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
-          <i className="fa fa-search"></i>
-          <i className="fa fa-bell"></i>
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
-            alt="User Profile"
-            className="avatar"
-          />
-          <button className="logout-btn" onClick={handleLogout}>
+          <div className="search-container">
+            <div className="search-wrapper">
+              <input
+                type="text"
+                className={`search-input ${showSearch ? 'active' : ''}`}
+                placeholder="Search menu..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                onBlur={() => {
+                  // Delay hiding results to allow clicking them
+                  setTimeout(() => {
+                    setSearchResults([]);
+                    if (!searchTerm) {
+                      setShowSearch(false);
+                    }
+                  }, 200);
+                }}
+              />
+              <i 
+                className="fa fa-search search-icon"
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  if (!showSearch) {
+                    setTimeout(() => document.querySelector('.search-input').focus(), 100);
+                  }
+                }}
+              ></i>
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  {searchResults.map((item) => (
+                    <div
+                      key={item.path}
+                      className="search-result-item"
+                      onClick={() => {
+                        navigate(item.path);
+                        setSearchTerm('');
+                        setSearchResults([]);
+                        setShowSearch(false);
+                      }}
+                    >
+                      <i className={`fa-solid ${item.icon}`}></i>
+                      <span>{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <i className="fa fa-bell" onClick={() => setShowNotifications(!showNotifications)}></i>
+            {notifications.length > 0 && (
+              <span className="notification-badge">{notifications.length}</span>
+            )}
+            {showNotifications && (
+              <div className="notifications-dropdown">
+                <div className="notifications-header">
+                  <h3>Notifications</h3>
+                  {notifications.length > 0 && (
+                    <button 
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#2471e5',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                      onClick={() => setNotifications([])}
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="notification-list">
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                      No new notifications
+                    </div>
+                  ) : (
+                    notifications.map((notification, index) => (
+                      <div key={index} className="notification-item" onClick={() => handleNotificationClick(index)}>
+                        <div className="notification-content">{notification.content}</div>
+                        <div className="notification-time">{notification.time}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{ position: 'relative' }}>
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+              alt="User Profile"
+              className="avatar"
+              onClick={() => setShowProfile(!showProfile)}
+            />
+            {showProfile && (
+              <div className="profile-dropdown">
+                <div className="profile-header">
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+                    alt="Profile"
+                  />
+                  <div className="profile-info">
+                    <h4>{userName}</h4>
+                    <p>{JSON.parse(localStorage.getItem('user'))?.email || 'user@example.com'}</p>
+                  </div>
+                </div>
+                <div className="profile-menu">
+                  <Link to="/setting-page" className="profile-menu-item">
+                    <i className="fa-solid fa-user"></i>
+                    <span>View Profile</span>
+                  </Link>
+                  <div className="profile-menu-item" onClick={() => navigate('/setting-page')}>
+                    <i className="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                  </div>
+                  <div className="profile-menu-item" onClick={handleLogout}>
+                    <i className="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <button 
+            className="logout-btn" 
+            onClick={handleLogout}
+            style={{
+              background: darkMode ? 'rgba(137, 136, 136, 0.15)' : '',
+              color: darkMode ? '#fff' : 'inherit',
+              border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : ''
+            }}
+          >
             Logout
           </button>
         </div>
@@ -402,10 +589,7 @@ function Dashboard() {
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
-          <div className="dark-mode-toggle" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="dark-mode-toggle">
             <i style={{ width: "20px", color: darkMode ? '#fff' : 'inherit' }} className="fa-solid fa-moon"></i>
             <span style={{ marginLeft: "13px", color: darkMode ? '#fff' : 'inherit' }}>Dark Mode</span>
             <label className="switch">
@@ -439,7 +623,7 @@ function Dashboard() {
           }}>
             <span>Monthly Income</span>
             <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
-              {formatINR(monthTotals.income)}{" "}
+              ₹<AnimatedNumber value={monthTotals.income} />{" "}
               {(() => {
                 const curr = monthTotals.income;
                 const prev = prevMonthTotals.income || 0;
@@ -464,7 +648,7 @@ function Dashboard() {
           }}>
             <span>Monthly Expenses </span>
             <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
-              {formatINR(monthTotals.expenses)}{" "}
+              ₹<AnimatedNumber value={monthTotals.expenses} />{" "}
               {(() => {
                 const curr = monthTotals.expenses;
                 const prev = prevMonthTotals.expenses || 0;
@@ -499,7 +683,7 @@ function Dashboard() {
                 
                 return (
                   <>
-                    ₹{curr.toFixed(2)}{' '}
+                    ₹<AnimatedNumber value={curr} />{' '}
 
                   </>
                 );
@@ -512,7 +696,34 @@ function Dashboard() {
           }}>
             <span>Savings Rate</span>
             <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
-              0.0% <span className="down">↓</span>
+              {(() => {
+                const income = monthTotals.income;
+                const expenses = monthTotals.expenses;
+                const prevIncome = prevMonthTotals.income || 0;
+                const prevExpenses = prevMonthTotals.expenses || 0;
+                
+                // Calculate current and previous savings rates
+                const savings = income - expenses;
+                const prevSavings = prevIncome - prevExpenses;
+                const savingsRate = income > 0 ? (savings / income) * 100 : 0;
+                const prevSavingsRate = prevIncome > 0 ? (prevSavings / prevIncome) * 100 : 0;
+                
+                // Calculate the change in savings rate
+                const rateChange = prevSavingsRate === 0 
+                  ? (savingsRate > 0 ? 100 : 0) 
+                  : ((savingsRate - prevSavingsRate) / Math.abs(prevSavingsRate)) * 100;
+                
+                const isPositive = rateChange >= 0;
+                
+                return (
+                  <>
+                    {savingsRate.toFixed(1)}%{' '}
+                    <span className={isPositive ? 'up' : 'down'}>
+                      {isPositive ? '↑' : '↓'} {Math.abs(rateChange).toFixed(0)}%
+                    </span>
+                  </>
+                );
+              })()}
             </h3>
           </div>
         </div>

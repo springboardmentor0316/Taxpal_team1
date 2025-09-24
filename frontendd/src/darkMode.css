@@ -1,24 +1,7 @@
-/* Dark Mode Styles - Only color changes */
+/* Dark Mode Styles */
 body.dark-mode {
-  background: linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%) fixed;
+  background: linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%);
   color: #fff;
-  background-attachment: fixed;
-}
-
-/* Container colors */
-.dark-mode .dashboard-container,
-.dark-mode .budget-container,
-.dark-mode .settings-container,
-.dark-mode .tax-estimator-container {
-  background: transparent;
-}
-
-/* Content area colors */
-.dark-mode .dashboard-content,
-.dark-mode .budget-content,
-.dark-mode .settings-content,
-.dark-mode .tax-estimator-content {
-  background: linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%) fixed;
 }
 
 /* Navbar Dark Mode */
@@ -43,17 +26,14 @@ body.dark-mode {
   background: rgba(137, 136, 136, 0.25);
 }
 
-/* Cards Dark Mode - Only colors */
+/* Cards Dark Mode */
 .dark-mode .summary-card,
 .dark-mode .income-expense-chart,
 .dark-mode .expense-breakdown,
-.dark-mode .transactions-panel,
-.dark-mode .budget-card,
-.dark-mode .settings-card,
-.dark-mode .tax-card {
+.dark-mode .transactions-panel {
   background: rgba(137, 136, 136, 0.37);
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Text Colors */

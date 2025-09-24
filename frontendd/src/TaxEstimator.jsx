@@ -1,7 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import logo from "../img/taxpal1.png";
+import { API_ENDPOINTS } from "./config/api";
+// Utility function to get due dates for quarters
+const getDueDate = (quarter) => {
+  const year = new Date().getFullYear();
+  const dueDates = {
+    'Q1': `${year}-04-15`,
+    'Q2': `${year}-06-15`,
+    'Q3': `${year}-09-15`,
+    'Q4': `${year}-01-15`
+  };
+  return new Date(dueDates[quarter]);
+};
+
 const countries = [
   {
     name: "United States",
@@ -44,6 +57,32 @@ const countries = [
 
 const TaxEstimator = () => {
   const navigate = useNavigate();
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  
+  const menuItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
+    { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
+    { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
+    { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
+    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
+  ];
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    if (value.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+
+    const filtered = menuItems.filter(item =>
+      item.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setSearchResults(filtered);
+  };
+
   const [formData, setFormData] = useState({
     country: "United States",
     state: "California",
@@ -59,6 +98,30 @@ const TaxEstimator = () => {
   const [estimatedTax, setEstimatedTax] = useState(0);
 
   const [darkMode, setDarkMode] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Reset error when form data changes
+  useEffect(() => {
+    setError(null);
+  }, [formData]);
+
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      console.log('Token:', token);
+      console.log('User data:', user);
+      if (token && user) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => {
@@ -103,21 +166,23 @@ const TaxEstimator = () => {
     const quarterInfo = quarterMap[quarter];
     if (!quarterInfo) return;
 
-    // Store tax data in localStorage
-    // Save current tax as previous before updating
-    const currentTax = localStorage.getItem("taxEstimate");
-    if (currentTax) {
-      localStorage.setItem("prevTaxEstimate", currentTax);
-    }
-
     const taxData = {
       quarter,
       estimatedTax,
       dueDate: quarterInfo.dueDate,
       reminderDate: quarterInfo.reminderDate,
+      timestamp: new Date().toISOString(), // Add timestamp for sorting
+      id: Date.now(), // Unique identifier for each estimate
     };
 
-    localStorage.setItem("taxEstimate", JSON.stringify(taxData));
+    // Get existing history or initialize new array
+    const existingHistory = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
+    
+    // Add new estimate to history
+    existingHistory.push(taxData);
+    
+    // Save updated history
+    localStorage.setItem("taxEstimatesHistory", JSON.stringify(existingHistory));
     // Show success message
     toast.success("Tax calculation complete. Reminders have been scheduled.", {
       position: "top-center",
@@ -125,23 +190,84 @@ const TaxEstimator = () => {
     });
   };
 
-  const calculateTax = () => {
+  const calculateTax = async () => {
+    setLoading(true);
+    setError(null);
+    
     const toNumber = (val) => {
       if (typeof val === "number") return val;
       if (!val) return 0;
       return Number(String(val).replace(/[^0-9.\-]/g, "")) || 0;
     };
+
     const income = toNumber(formData.grossIncome);
-    const deductions =
-      toNumber(formData.businessExpenses) +
-      toNumber(formData.retirementContributions) +
-      toNumber(formData.healthInsurance) +
-      toNumber(formData.homeOfficeDeduction);
-    const taxable = Math.max(0, income - deductions);
-    const rate = formData.filingStatus === "Single" ? 0.25 : 0.22;
-    const calculated = taxable * rate;
-    setEstimatedTax(calculated);
-    generateTaxReminders(formData.quarter, calculated);
+    const deductions = {
+      businessExpenses: toNumber(formData.businessExpenses),
+      retirementContributions: toNumber(formData.retirementContributions),
+      healthInsurance: toNumber(formData.healthInsurance),
+      homeOfficeDeduction: toNumber(formData.homeOfficeDeduction)
+    };
+
+    try {
+      if (!isLoggedIn) {
+        toast.error("Please log in to save tax estimates");
+        return;
+      }
+
+      let userData;
+      try {
+        userData = JSON.parse(localStorage.getItem('user'));
+        console.log('Parsed user data:', userData);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        toast.error("Error accessing user data. Please try logging in again.");
+        return;
+      }
+
+      if (!userData || !userData.email) {
+        console.error('Invalid user data:', userData);
+        toast.error("User data is invalid. Please try logging in again.");
+        return;
+      }
+
+      const response = await fetch(API_ENDPOINTS.taxEstimate.create, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          userId: userData.email, // Using email as the unique identifier
+          quarter: formData.quarter.split(' ')[0], // Extract Q1, Q2, etc.
+          country: formData.country,
+          state: formData.state,
+          filingStatus: formData.filingStatus,
+          grossIncome: income,
+          deductions: deductions
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setEstimatedTax(data.data.estimatedTax);
+        generateTaxReminders(formData.quarter, data.data.estimatedTax);
+        toast.success("Tax estimate saved successfully");
+      } else {
+        console.error('Server error:', data);
+        toast.error(data.message || "Failed to calculate tax");
+      }
+    } catch (error) {
+      console.error('Error calculating tax:', error);
+      setError(error.message);
+      if (error.message === "Failed to fetch") {
+        toast.error("Cannot connect to the server. Please make sure the backend server is running.");
+      } else {
+        toast.error("Failed to calculate tax: " + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const currentCountry = countries.find((c) => c.name === formData.country);
@@ -153,7 +279,53 @@ const TaxEstimator = () => {
           <span className="tagline">Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
-          <i className="fa fa-search"></i>
+          <div className="search-container">
+            <div className="search-wrapper">
+              <input
+                type="text"
+                className={`search-input ${showSearch ? 'active' : ''}`}
+                placeholder="Search menu..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                onBlur={() => {
+                  setTimeout(() => {
+                    setSearchResults([]);
+                    if (!searchTerm) {
+                      setShowSearch(false);
+                    }
+                  }, 200);
+                }}
+              />
+              <i 
+                className="fa fa-search search-icon"
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  if (!showSearch) {
+                    setTimeout(() => document.querySelector('.search-input').focus(), 100);
+                  }
+                }}
+              ></i>
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  {searchResults.map((item) => (
+                    <div
+                      key={item.path}
+                      className="search-result-item"
+                      onClick={() => {
+                        navigate(item.path);
+                        setSearchTerm('');
+                        setSearchResults([]);
+                        setShowSearch(false);
+                      }}
+                    >
+                      <i className={`fa-solid ${item.icon}`}></i>
+                      <span>{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           <i className="fa fa-bell"></i>
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
@@ -754,23 +926,48 @@ const TaxEstimator = () => {
             {/* Calculate Button */}
             <button
               onClick={calculateTax}
+              disabled={loading}
               style={{
                 width: "100%",
                 padding: "14px 24px",
-                backgroundColor: "#207ED0",
+                backgroundColor: loading ? "#9CA3AF" : "#207ED0",
                 color: "#fff",
                 border: "none",
                 borderRadius: "15px",
                 fontSize: "14px",
                 fontWeight: "500",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 transition: "background-color 0.2s",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
               }}
-              onMouseOver={(e) => (e.target.style.backgroundColor = "#2563EB")}
-              onMouseOut={(e) => (e.target.style.backgroundColor = "#3B82F6")}
+              onMouseOver={(e) => !loading && (e.target.style.backgroundColor = "#2563EB")}
+              onMouseOut={(e) => !loading && (e.target.style.backgroundColor = "#3B82F6")}
             >
-              Calculate Estimated Tax
+              {loading ? (
+                <>
+                  <i className="fa fa-spinner fa-spin" />
+                  Calculating...
+                </>
+              ) : (
+                "Calculate Estimated Tax"
+              )}
             </button>
+            
+            {error && (
+              <div style={{ 
+                marginTop: "16px", 
+                padding: "12px", 
+                backgroundColor: "#FEE2E2", 
+                color: "#B91C1C",
+                borderRadius: "8px",
+                fontSize: "14px" 
+              }}>
+                {error}
+              </div>
+            )}
           </div>
 
           {/* Right Panel - Tax Summary */}
@@ -801,21 +998,69 @@ const TaxEstimator = () => {
             <div
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}
             >
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "#6B7280",
+                    fontSize: "14px",
+                    marginBottom: "8px"
+                  }}
+                >
+                  <span>Quarterly Estimated Tax</span>
+                  <span style={{ color: "#111827", fontWeight: 700 }}>
+                    ₹{Number(estimatedTax).toFixed(2)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "#6B7280",
+                    fontSize: "14px",
+                    marginBottom: "8px"
+                  }}
+                >
+                  <span>Annual Tax Estimate</span>
+                  <span style={{ color: "#111827", fontWeight: 700 }}>
+                    ₹{(Number(estimatedTax) * 4).toFixed(2)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "#6B7280",
+                    fontSize: "14px",
+                    marginBottom: "8px"
+                  }}
+                >
+                  <span>Total Deductions</span>
+                  <span style={{ color: "#111827", fontWeight: 700 }}>
+                    ₹{(
+                      Number(formData.businessExpenses || 0) +
+                      Number(formData.retirementContributions || 0) +
+                      Number(formData.healthInsurance || 0) +
+                      Number(formData.homeOfficeDeduction || 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              </div>
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
+                  fontSize: "12px",
                   color: "#6B7280",
-                  fontSize: "14px",
+                  padding: "12px",
+                  background: "#F3F4F6",
+                  borderRadius: "8px",
+                  marginTop: "8px"
                 }}
               >
-                <span>Estimated Tax</span>
-                <span style={{ color: "#111827", fontWeight: 700 }}>
-                  ₹{Number(estimatedTax).toFixed(2)}
-                </span>
-              </div>
-              <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                Demo calculation using a simple rate based on filing status.
+                Tax calculation based on {formData.filingStatus.toLowerCase()} filing status. 
+                Your next payment for {formData.quarter} is due on {
+                  formData.quarter ? getDueDate(formData.quarter.split(' ')[0]).toLocaleDateString() : 'calculating...'
+                }.
               </div>
             </div>
           </div>
@@ -823,7 +1068,7 @@ const TaxEstimator = () => {
       </div>
 
       {/* Tax Calendar */}
-      <div className="content-container" style={{ padding: "20px", marginLeft : "-21px", }}>
+      <div className="content-container" style={{ padding: "20px", marginLeft: "-21px" }}>
         <div
           className="main-card"
           style={{
@@ -846,10 +1091,13 @@ const TaxEstimator = () => {
           </h1>
 
           {(() => {
-            const taxData = JSON.parse(
-              localStorage.getItem("taxEstimate") || "{}"
-            );
-            if (!taxData.quarter) {
+            // Get all tax estimates from localStorage history
+            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
+            
+            // Sort estimates by date
+            allEstimates.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+            if (allEstimates.length === 0) {
               return (
                 <div
                   style={{
@@ -864,126 +1112,118 @@ const TaxEstimator = () => {
               );
             }
 
-            const reminderDate = new Date(taxData.reminderDate);
-            const dueDate = new Date(taxData.dueDate);
             const monthNames = [
-              "January",
-              "February",
-              "March",
-              "April",
-              "May",
-              "June",
-              "July",
-              "August",
-              "September",
-              "October",
-              "November",
-              "December",
+              "January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"
             ];
 
-            return (
-              <>
-                <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>
-                  {monthNames[reminderDate.getMonth()]}{" "}
-                  {reminderDate.getFullYear()}
-                </h2>
-                <div
-                  className="event-card"
-                  style={{
-                    border: "1px solid #E5E7EB",
-                    borderRadius: "8px",
-                    color: "#1E293B",
-                    padding: "16px",
-                    marginBottom: "16px",
-                  }}
-                >
-                  <div
-                    className="event-title"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span>
-                      Reminder: {taxData.quarter} Estimated Tax Payment
-                    </span>
-                    <span
-                      className="badge reminder"
-                      style={{
-                        background: "#0088FF",
-                        color: "white",
-                        padding: "4px 8px",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      Reminder
-                    </span>
-                  </div>
-                  <div
-                    className="event-date"
-                    style={{
-                      color: "#6B7280",
-                      fontSize: "14px",
-                      margin: "8px 0",
-                    }}
-                  >
-                    {reminderDate.toLocaleDateString()}
-                  </div>
-                  <div className="event-desc" style={{ color: "#374151" }}>
-                    Reminder for upcoming tax payment of ₹
-                    {Number(taxData.estimatedTax).toFixed(2)} due on{" "}
-                    {dueDate.toLocaleDateString()}
-                  </div>
-                </div>
+            // Group events by month
+            const eventsByMonth = {};
+            
+            allEstimates.forEach(estimate => {
+              const reminderDate = new Date(estimate.reminderDate);
+              const dueDate = new Date(estimate.dueDate);
+              
+              const reminderKey = `${reminderDate.getFullYear()}-${reminderDate.getMonth()}`;
+              const dueKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}`;
+              
+              if (!eventsByMonth[reminderKey]) eventsByMonth[reminderKey] = [];
+              if (!eventsByMonth[dueKey]) eventsByMonth[dueKey] = [];
+              
+              eventsByMonth[reminderKey].push({
+                type: 'reminder',
+                date: reminderDate,
+                data: estimate
+              });
+              
+              eventsByMonth[dueKey].push({
+                type: 'payment',
+                date: dueDate,
+                data: estimate
+              });
+            });
 
-                <div
-                  className="event-card"
-                  style={{
-                    border: "1px solid #E5E7EB",
-                    borderRadius: "8px",
-                    padding: "16px",
-                  }}
-                >
-                  <div
-                    className="event-title"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span>{taxData.quarter} Estimated Tax Payment</span>
-                    <span
-                      className="badge payment"
-                      style={{
-                        background: "#00C0E8",
-                        color: "white",
-                        padding: "4px 8px",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      Payment
-                    </span>
-                  </div>
-                  <div
-                    className="event-date"
-                    style={{
-                      color: "#6B7280",
-                      fontSize: "14px",
-                      margin: "8px 0",
-                    }}
-                  >
-                    {dueDate.toLocaleDateString()}
-                  </div>
-                  <div className="event-desc" style={{ color: "#374151" }}>
-                    {taxData.quarter} estimated tax payment of ₹
-                    {Number(taxData.estimatedTax).toFixed(2)} is due
-                  </div>
-                </div>
-              </>
+            // Sort months chronologically
+            const sortedMonths = Object.keys(eventsByMonth).sort();
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                {sortedMonths.map(monthKey => {
+                  const [year, month] = monthKey.split('-').map(Number);
+                  const events = eventsByMonth[monthKey].sort((a, b) => a.date - b.date);
+
+                  return (
+                    <div key={monthKey}>
+                      <h2 style={{ 
+                        fontSize: "18px", 
+                        marginBottom: "16px",
+                        color: "#1E293B",
+                        borderBottom: "2px solid #E5E7EB",
+                        paddingBottom: "8px"
+                      }}>
+                        {monthNames[month]} {year}
+                      </h2>
+                      
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        {events.map((event, index) => (
+                          <div
+                            key={`${event.type}-${index}`}
+                            className="event-card"
+                            style={{
+                              border: "1px solid #E5E7EB",
+                              borderRadius: "8px",
+                              padding: "16px",
+                              backgroundColor: event.type === 'reminder' ? '#F0F9FF' : '#F0FDF4'
+                            }}
+                          >
+                            <div
+                              className="event-title"
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <span>
+                                {event.type === 'reminder' ? 'Reminder: ' : ''}
+                                {event.data.quarter} Estimated Tax {event.type === 'payment' ? 'Payment' : 'Reminder'}
+                              </span>
+                              <span
+                                className={`badge ${event.type}`}
+                                style={{
+                                  background: event.type === 'reminder' ? '#0088FF' : '#00C0E8',
+                                  color: "white",
+                                  padding: "4px 8px",
+                                  borderRadius: "12px",
+                                  fontSize: "12px",
+                                }}
+                              >
+                                {event.type === 'reminder' ? 'Reminder' : 'Payment'}
+                              </span>
+                            </div>
+                            <div
+                              className="event-date"
+                              style={{
+                                color: "#6B7280",
+                                fontSize: "14px",
+                                margin: "8px 0",
+                              }}
+                            >
+                              {event.date.toLocaleDateString()}
+                            </div>
+                            <div className="event-desc" style={{ color: "#374151" }}>
+                              {event.type === 'reminder' 
+                                ? `Reminder for upcoming tax payment of ₹${Number(event.data.estimatedTax).toFixed(2)} due on ${new Date(event.data.dueDate).toLocaleDateString()}`
+                                : `${event.data.quarter} estimated tax payment of ₹${Number(event.data.estimatedTax).toFixed(2)} is due`
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             );
           })()}
         </div>

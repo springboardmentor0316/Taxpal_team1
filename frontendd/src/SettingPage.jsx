@@ -7,6 +7,32 @@ import { toast } from "react-toastify";
 
 function Settings() {
   const navigate = useNavigate();
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  
+  const menuItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
+    { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
+    { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
+    { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
+    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
+  ];
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    if (value.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+
+    const filtered = menuItems.filter(item =>
+      item.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setSearchResults(filtered);
+  };
+
   const [activeTab, setActiveTab] = useState("expense");
   const [expenseCategories, setExpenseCategories] = useState(() => {
     const saved = localStorage.getItem("expenseCategories");
@@ -99,7 +125,53 @@ function Settings() {
           <span className="tagline">Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
-          <i className="fa fa-search"></i>
+          <div className="search-container">
+            <div className="search-wrapper">
+              <input
+                type="text"
+                className={`search-input ${showSearch ? 'active' : ''}`}
+                placeholder="Search menu..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                onBlur={() => {
+                  setTimeout(() => {
+                    setSearchResults([]);
+                    if (!searchTerm) {
+                      setShowSearch(false);
+                    }
+                  }, 200);
+                }}
+              />
+              <i 
+                className="fa fa-search search-icon"
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  if (!showSearch) {
+                    setTimeout(() => document.querySelector('.search-input').focus(), 100);
+                  }
+                }}
+              ></i>
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  {searchResults.map((item) => (
+                    <div
+                      key={item.path}
+                      className="search-result-item"
+                      onClick={() => {
+                        navigate(item.path);
+                        setSearchTerm('');
+                        setSearchResults([]);
+                        setShowSearch(false);
+                      }}
+                    >
+                      <i className={`fa-solid ${item.icon}`}></i>
+                      <span>{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           <i className="fa fa-bell"></i>
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"

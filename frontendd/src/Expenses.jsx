@@ -97,7 +97,7 @@ function Expenses({ onClose, onSave }) {
                   style={{
                     fontSize: "15px",
                     marginBottom: "5px",
-                    marginTop: "-15px",
+                    marginTop: "-19px",
                     fontWeight: "600",
                   }}
                 >
