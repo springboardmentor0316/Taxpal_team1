@@ -28,8 +28,11 @@ app.get('/', (req, res) => {
   res.send('API is running');
 });
 
+import taxEstimateRoutes from './routes/taxEstimate.js';
+
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/tax-estimate', taxEstimateRoutes);
 
 const resolvedMongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taxpal';
 console.log('MONGO_URI seen by server:', JSON.stringify(resolvedMongoUri));
