@@ -402,7 +402,6 @@ function Dashboard() {
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 onBlur={() => {
-                  // Delay hiding results to allow clicking them
                   setTimeout(() => {
                     setSearchResults([]);
                     if (!searchTerm) {
