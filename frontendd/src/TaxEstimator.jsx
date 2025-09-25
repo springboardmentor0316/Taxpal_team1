@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import logo from "../img/taxpal1.png";
 import { API_ENDPOINTS } from "./config/api";
-// Utility function to get due dates for quarters
 const getDueDate = (quarter) => {
   const year = new Date().getFullYear();
   const dueDates = {
@@ -102,7 +101,6 @@ const TaxEstimator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Reset error when form data changes
   useEffect(() => {
     setError(null);
   }, [formData]);
@@ -124,8 +122,17 @@ const TaxEstimator = () => {
   }, []);
 
   const handleInputChange = (field, value) => {
+    // For numeric fields, validate input
+    if (['grossIncome', 'businessExpenses', 'retirementContributions', 'healthInsurance', 'homeOfficeDeduction'].includes(field)) {
+      // Allow only numbers, decimal point, and backspace
+      if (!/^\d*\.?\d*$/.test(value) && value !== '') {
+        // If invalid input, don't update the state
+        toast.error("Please enter numbers only");
+        return;
+      }
+    }
+
     setFormData((prev) => {
-      // Reset state if country changes
       if (field === "country") {
         const selectedCountry = countries.find((c) => c.name === value);
         return {
@@ -139,7 +146,6 @@ const TaxEstimator = () => {
   };
 
   const generateTaxReminders = (quarter, estimatedTax) => {
-    // Extract quarter and year from the selected quarter
     const quarterMap = {
       "Q1 (Jan - Mar 2025)": {
         number: 1,
@@ -171,19 +177,16 @@ const TaxEstimator = () => {
       estimatedTax,
       dueDate: quarterInfo.dueDate,
       reminderDate: quarterInfo.reminderDate,
-      timestamp: new Date().toISOString(), // Add timestamp for sorting
-      id: Date.now(), // Unique identifier for each estimate
+      timestamp: new Date().toISOString(), 
+      id: Date.now(), 
     };
-
-    // Get existing history or initialize new array
-    const existingHistory = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
     
-    // Add new estimate to history
+    const existingHistory = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
+
     existingHistory.push(taxData);
     
-    // Save updated history
     localStorage.setItem("taxEstimatesHistory", JSON.stringify(existingHistory));
-    // Show success message
+    
     toast.success("Tax calculation complete. Reminders have been scheduled.", {
       position: "top-center",
       autoClose: 3000,
@@ -193,6 +196,49 @@ const TaxEstimator = () => {
   const calculateTax = async () => {
     setLoading(true);
     setError(null);
+
+    // Convert values to numbers for validation
+    const grossIncome = parseFloat(formData.grossIncome) || 0;
+    const businessExpenses = parseFloat(formData.businessExpenses) || 0;
+    const retirementContributions = parseFloat(formData.retirementContributions) || 0;
+    const healthInsurance = parseFloat(formData.healthInsurance) || 0;
+    const homeOfficeDeduction = parseFloat(formData.homeOfficeDeduction) || 0;
+
+    // Form validation
+    if (!formData.grossIncome.trim() || grossIncome === 0) {
+      setError("Gross Income must be greater than zero");
+      setLoading(false);
+      toast.error("Please enter a valid Gross Income greater than zero");
+      return;
+    }
+
+    if (!formData.businessExpenses.trim() || businessExpenses === 0) {
+      setError("Business Expenses must be greater than zero");
+      setLoading(false);
+      toast.error("Please enter valid Business Expenses greater than zero");
+      return;
+    }
+
+    if (!formData.retirementContributions.trim() || retirementContributions === 0) {
+      setError("Retirement Contributions must be greater than zero");
+      setLoading(false);
+      toast.error("Please enter valid Retirement Contributions greater than zero");
+      return;
+    }
+
+    if (!formData.healthInsurance.trim() || healthInsurance === 0) {
+      setError("Health Insurance Premium must be greater than zero");
+      setLoading(false);
+      toast.error("Please enter valid Health Insurance Premium greater than zero");
+      return;
+    }
+
+    if (!formData.homeOfficeDeduction.trim() || homeOfficeDeduction === 0) {
+      setError("Home Office Deduction must be greater than zero");
+      setLoading(false);
+      toast.error("Please enter valid Home Office Deduction greater than zero");
+      return;
+    }
     
     const toNumber = (val) => {
       if (typeof val === "number") return val;
@@ -237,8 +283,8 @@ const TaxEstimator = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          userId: userData.email, // Using email as the unique identifier
-          quarter: formData.quarter.split(' ')[0], // Extract Q1, Q2, etc.
+          userId: userData.email, 
+          quarter: formData.quarter.split(' ')[0], 
           country: formData.country,
           state: formData.state,
           filingStatus: formData.filingStatus,
@@ -546,7 +592,7 @@ const TaxEstimator = () => {
               flex: "1 1 auto",
               backgroundColor: "#fff",
               borderRadius: "8px",
-              border: "1px solid #E5E7EB",
+               border: "1px solid #E5E7EB",
               boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
               padding: "24px",
               width: "800px",
@@ -1091,10 +1137,9 @@ const TaxEstimator = () => {
           </h1>
 
           {(() => {
-            // Get all tax estimates from localStorage history
-            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
             
-            // Sort estimates by date
+            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
+
             allEstimates.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
             if (allEstimates.length === 0) {
@@ -1117,7 +1162,6 @@ const TaxEstimator = () => {
               "July", "August", "September", "October", "November", "December"
             ];
 
-            // Group events by month
             const eventsByMonth = {};
             
             allEstimates.forEach(estimate => {
@@ -1143,7 +1187,6 @@ const TaxEstimator = () => {
               });
             });
 
-            // Sort months chronologically
             const sortedMonths = Object.keys(eventsByMonth).sort();
 
             return (

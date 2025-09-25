@@ -4,7 +4,7 @@ const taxEstimateSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
-    // This will be the user's email
+    
     index: true
   },
   quarter: {
