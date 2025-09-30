@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "./config";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  getUnreadCount
+} from "./config/notificationService";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./Dashboard.css";
@@ -8,26 +13,26 @@ import "./darkMode.css";
 import Income from "./Income.jsx";
 import Expenses from "./Expenses.jsx";
 import logo from "../img/taxpal1.png";
-// Chart colors (Tailwind-like): expanded blue palette derived from provided color
-const COLOR_PRIMARY = "#1D4ED8"; // Primary/600-base
-const COLOR_SKY = "#38BDF8"; // Additional/sky
+
+const COLOR_PRIMARY = "#1D4ED8"; 
+const COLOR_SKY = "#38BDF8"; 
 const PIE_COLORS = [
-  "#1D4ED8", // blue-700
-  "#2563EB", // blue-600
-  "#3B82F6", // blue-500
-  "#60A5FA", // blue-400
-  "#93C5FD", // blue-300
-  "#BFDBFE", // blue-200
-  "#DBEAFE", // blue-100
-  "#38BDF8", // sky-400
-  "#22D3EE", // cyan-400
-  "#A5F3FC", // cyan-200
-  "#E0F2FE", // sky-100
-  "#BAE6FD", // sky-200
+  "#1D4ED8", 
+  "#2563EB", 
+  "#3B82F6", 
+  "#60A5FA", 
+  "#93C5FD", 
+  "#BFDBFE", 
+  "#DBEAFE", 
+  "#38BDF8", 
+  "#22D3EE", 
+  "#A5F3FC", 
+  "#E0F2FE", 
+  "#BAE6FD", 
 ];
-// Bar chart sizing
-const BAR_WIDTH = 13; // px
-const BAR_GAP = 5; // px
+
+const BAR_WIDTH = 13; 
+const BAR_GAP = 5; 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -91,6 +96,13 @@ function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Load notifications
+  useEffect(() => {
+    setNotifications(getNotifications());
+    setUnreadCount(getUnreadCount());
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
@@ -282,10 +294,16 @@ function Dashboard() {
     }
   }, []);
 
-  const handleNotificationClick = (index) => {
-    const updatedNotifications = notifications.filter((_, i) => i !== index);
-    setNotifications(updatedNotifications);
-  };
+  // Click outside to close notifications
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest('.notification-container')) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     const id = "logoutConfirm";
@@ -440,44 +458,80 @@ function Dashboard() {
               )}
             </div>
           </div>
-          <div style={{ position: 'relative' }}>
-            <i className="fa fa-bell" onClick={() => setShowNotifications(!showNotifications)}></i>
-            {notifications.length > 0 && (
-              <span className="notification-badge">{notifications.length}</span>
+          <div className="notification-container" style={{ position: 'relative' }}>
+            <i 
+              className="fa fa-bell" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setUnreadCount(0);
+                notifications.forEach(n => {
+                  if (!n.read) {
+                    markNotificationAsRead(n.id);
+                  }
+                });
+                setNotifications(getNotifications());
+              }}
+            ></i>
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#f44336',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: '12px',
+              }}>
+                {unreadCount}
+              </span>
             )}
             {showNotifications && (
-              <div className="notifications-dropdown">
-                <div className="notifications-header">
-                  <h3>Notifications</h3>
-                  {notifications.length > 0 && (
-                    <button 
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#2471e5',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
-                      onClick={() => setNotifications([])}
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-                <div className="notification-list">
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-                      No new notifications
-                    </div>
-                  ) : (
-                    notifications.map((notification, index) => (
-                      <div key={index} className="notification-item" onClick={() => handleNotificationClick(index)}>
-                        <div className="notification-content">{notification.content}</div>
-                        <div className="notification-time">{notification.time}</div>
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                width: '300px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: 'white',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                borderRadius: '8px',
+                zIndex: 1000,
+              }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
+                    No new notifications
+                  </div>
+                ) : (
+                  <div>
+                    {notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '12px',
+                          borderBottom: '1px solid #eee',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                            {notification.title}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#666' }}>
+                            {notification.message}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                            {new Date(notification.date).toLocaleString()}
+                          </div>
+                        </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -517,17 +571,7 @@ function Dashboard() {
               </div>
             )}
           </div>
-          <button 
-            className="logout-btn" 
-            onClick={handleLogout}
-            style={{
-              background: darkMode ? 'rgba(137, 136, 136, 0.15)' : '',
-              color: darkMode ? '#fff' : 'inherit',
-              border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : ''
-            }}
-          >
-            Logout
-          </button>
+
         </div>
       </div>
 
@@ -573,8 +617,10 @@ function Dashboard() {
                 </span>
               </Link>
             </li>
-            <li>
-              <Link to="#">
+            <li  className={
+                useLocation().pathname === "/report" ? "active" : ""
+              }>
+              <Link to="/report">
                 <i className="fa-solid fa-file"></i>
                 <span style={{ marginLeft: "23px" }} className="text">
                   Reports

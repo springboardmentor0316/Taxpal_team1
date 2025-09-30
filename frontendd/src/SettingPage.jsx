@@ -3,13 +3,39 @@ import { User, Tag, Bell, Lock, SquarePen, X } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import logo from "../img/taxpal1.png";
 import { toast } from "react-toastify";
-
+import {
+  getNotifications,
+  markNotificationAsRead,
+  getUnreadCount,
+  clearNotifications
+} from "./config/notificationService";
 
 function Settings() {
   const navigate = useNavigate();
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [userName, setUserName] = useState("User");
+
+  // Load notifications and user info
+  useEffect(() => {
+    setNotifications(getNotifications());
+    setUnreadCount(getUnreadCount());
+
+    const userInfo = localStorage.getItem("user");
+    if (userInfo) {
+      try {
+        const user = JSON.parse(userInfo);
+        setUserName(user.name || "User");
+      } catch (err) {
+        console.error("Error parsing user info:", err);
+      }
+    }
+  }, []);
   
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
@@ -117,6 +143,26 @@ function Settings() {
     localStorage.setItem("incomeCategories", JSON.stringify(incomeCategories));
   }, [incomeCategories]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+    } catch (e) {}
+  }, [notifications]);
+
+  // Click outside to close notifications and profile
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest('.notification-container')) {
+        setShowNotifications(false);
+      }
+      if (!event.target.closest('.avatar') && !event.target.closest('.profile-dropdown')) {
+        setShowProfile(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div style={{ fontFamily: "Aboreto, system-ui", padding: "70px" }}>
       <div className="navbar">
@@ -172,105 +218,206 @@ function Settings() {
               )}
             </div>
           </div>
-          <i className="fa fa-bell"></i>
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
-            alt="User Profile"
-            className="avatar"
-          />
-          <button
-            className="logout-btn"
-            onClick={() => {
-              const id = "logoutConfirm";
-              if (toast.isActive(id)) return;
-              toast(
-                ({ closeToast }) => (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                      alignItems: "center",
-                      textAlign: "center",
-                      marginLeft: "60px",
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, color: "#111827" }}>
-                      Confirm Logout
-                    </div>
-                    <div style={{ color: "#4b5563", fontSize: 14 }}>
-                      Are you sure you want to log out?
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        marginTop: 6,
-                        justifyContent: "center",
-                      }}
-                    >
-                      <button
-                        onClick={() => {
-                          closeToast();
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: 8,
-                          border: "1px solid #d1d5db",
-                          background: "#ffffff",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          closeToast();
-                          localStorage.removeItem("token");
-                          localStorage.removeItem("user");
-                          toast.info("Logged out successfully", {
-                            toastId: "logoutOnce",
-                          });
-                          navigate("/");
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: 8,
-                          border: "none",
-                          background: "#207ed0",
-                          color: "#ffffff",
-                          cursor: "pointer",
-                          fontWeight: 600,
-                        }}
-                      >
-                        Confirm
-                      </button>
-                    </div>
+          <div className="notification-container" style={{ position: 'relative' }}>
+            <i 
+              className="fa fa-bell" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setUnreadCount(0);
+                notifications.forEach(n => {
+                  if (!n.read) {
+                    markNotificationAsRead(n.id);
+                  }
+                });
+                setNotifications(getNotifications());
+              }}
+            ></i>
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#f44336',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: '12px',
+              }}>
+                {notifications.length}
+              </span>
+            )}
+            {showNotifications && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                width: '300px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: 'white',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                borderRadius: '8px',
+                zIndex: 1000,
+              }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
+                    No new notifications
                   </div>
-                ),
-                {
-                  toastId: id,
-                  position: "top-center",
-                  autoClose: false,
-                  closeOnClick: false,
-                  draggable: false,
-                  closeButton: false,
-                  hideProgressBar: true,
-                  icon: false,
-                  style: {
-                    width: "360px",
-                    margin: "0 auto",
-                    textAlign: "center",
-                    borderRadius: 12,
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-                    padding: "16px 20px",
-                  },
-                }
-              );
-            }}
-          >
-            Logout
-          </button>
+                ) : (
+                  <div>
+                    {notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '12px',
+                          borderBottom: '1px solid #eee',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                            {notification.title}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#666' }}>
+                            {notification.message}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                            {new Date(notification.date).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <div style={{ position: 'relative' }}>
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+              alt="User Profile"
+              className="avatar"
+              onClick={() => setShowProfile(!showProfile)}
+            />
+            {showProfile && (
+              <div className="profile-dropdown">
+                <div className="profile-header">
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+                    alt="Profile"
+                  />
+                  <div className="profile-info">
+                    <h4>{userName}</h4>
+                    <p>{JSON.parse(localStorage.getItem('user'))?.email || 'user@example.com'}</p>
+                  </div>
+                </div>
+                <div className="profile-menu">
+                  <Link to="/setting-page" className="profile-menu-item">
+                    <i className="fa-solid fa-user"></i>
+                    <span>View Profile</span>
+                  </Link>
+                  <div className="profile-menu-item" onClick={() => navigate('/setting-page')}>
+                    <i className="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                  </div>
+                  <div className="profile-menu-item" onClick={() => {
+                    const id = "logoutConfirm";
+                    if (toast.isActive(id)) return;
+                    toast(
+                      ({ closeToast }) => (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 12,
+                            alignItems: "center",
+                            textAlign: "center",
+                            marginLeft: "60px",
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, color: "#111827" }}>
+                            Confirm Logout
+                          </div>
+                          <div style={{ color: "#4b5563", fontSize: 14 }}>
+                            Are you sure you want to log out?
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 10,
+                              marginTop: 6,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <button
+                              onClick={() => {
+                                closeToast();
+                              }}
+                              style={{
+                                padding: "8px 14px",
+                                borderRadius: 8,
+                                border: "1px solid #d1d5db",
+                                background: "#ffffff",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => {
+                                closeToast();
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                toast.info("Logged out successfully", {
+                                  toastId: "logoutOnce",
+                                });
+                                navigate("/");
+                              }}
+                              style={{
+                                padding: "8px 14px",
+                                borderRadius: 8,
+                                border: "none",
+                                background: "#207ed0",
+                                color: "#ffffff",
+                                cursor: "pointer",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Confirm
+                            </button>
+                          </div>
+                        </div>
+                      ),
+                      {
+                        toastId: id,
+                        position: "top-center",
+                        autoClose: false,
+                        closeOnClick: false,
+                        draggable: false,
+                        closeButton: false,
+                        hideProgressBar: true,
+                        icon: false,
+                        style: {
+                          width: "360px",
+                          margin: "0 auto",
+                          textAlign: "center",
+                          borderRadius: 12,
+                          boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                          padding: "16px 20px",
+                        },
+                      }
+                    );
+                  }}>
+                    <i className="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -311,7 +458,7 @@ function Settings() {
               </Link>
             </li>
             <li>
-              <Link to="#">
+              <Link to="/report">
                 <i className="fa-solid fa-file"></i>
                 <span style={{ marginLeft: "23px" }} className="text">
                   Reports

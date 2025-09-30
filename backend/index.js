@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import transactionRoutes from './routes/transactions.js';
+import reportRoutes from './routes/reports.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,7 @@ import taxEstimateRoutes from './routes/taxEstimate.js';
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/tax-estimate', taxEstimateRoutes);
+app.use('/api/reports', reportRoutes);
 
 const resolvedMongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taxpal';
 console.log('MONGO_URI seen by server:', JSON.stringify(resolvedMongoUri));
