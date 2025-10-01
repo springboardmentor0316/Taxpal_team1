@@ -42,7 +42,7 @@ function Settings() {
     { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
     { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
     { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
-    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Reports', path: '/report', icon: 'fa-file' },
     { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
   ];
 
@@ -58,6 +58,22 @@ function Settings() {
     );
     setSearchResults(filtered);
   };
+
+  const [selectedSection, setSelectedSection] = useState("profile");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profile, setProfile] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('user') || '{}');
+      return {
+        name: saved.name || '',
+        email: saved.email || '',
+        country: saved.country || '',
+        income: saved.income || '',
+      };
+    } catch {
+      return { name: '', email: '', country: '', income: '' };
+    }
+  });
 
   const [activeTab, setActiveTab] = useState("expense");
   const [expenseCategories, setExpenseCategories] = useState(() => {
@@ -319,10 +335,6 @@ function Settings() {
                     <i className="fa-solid fa-user"></i>
                     <span>View Profile</span>
                   </Link>
-                  <div className="profile-menu-item" onClick={() => navigate('/setting-page')}>
-                    <i className="fa-solid fa-gear"></i>
-                    <span>Settings</span>
-                  </div>
                   <div className="profile-menu-item" onClick={() => {
                     const id = "logoutConfirm";
                     if (toast.isActive(id)) return;
@@ -435,8 +447,8 @@ function Settings() {
                 <span className="text">Dashboard</span>
               </Link>
             </li>
-            <li>
-              <Link to="#">
+            <li className={useLocation().pathname === "/transactions" ? "active" : ""}>
+              <Link to="/transactions">
                 <i className="fa-solid fa-check"></i>
                 <span className="text">Transactions</span>
               </Link>
@@ -526,36 +538,58 @@ function Settings() {
           >
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               <li
+                onClick={() => setSelectedSection("profile")}
                 style={{
                   marginBottom: "15px",
                   padding: "8px",
                   color: "#0000007f",
+                  cursor: 'pointer',
+                  border: selectedSection === 'profile' ? '1px solid #0000007f' : '1px solid transparent',
+                  borderRadius: 8,
+                  background: selectedSection === 'profile' ? '#f0f8ff' : 'transparent'
                 }}
               >
                 <User size={20} color="#999" /> Profile
               </li>
               <li
+                onClick={() => setSelectedSection("categories")}
                 style={{
                   marginBottom: "15px",
                   padding: "8px",
-                  border: "1px solid #0000007f",
-                  borderRadius: "8px",
-                  background: "#f0f8ff",
                   color: "#0000007f",
+                  cursor: 'pointer',
+                  border: selectedSection === 'categories' ? '1px solid #0000007f' : '1px solid transparent',
+                  borderRadius: 8,
+                  background: selectedSection === 'categories' ? '#f0f8ff' : 'transparent'
                 }}
               >
                 <Tag size={20} color="#999" /> Categories
               </li>
               <li
+                onClick={() => setSelectedSection("notifications")}
                 style={{
                   marginBottom: "15px",
                   padding: "8px",
                   color: "#0000007f",
+                  cursor: 'pointer',
+                  border: selectedSection === 'notifications' ? '1px solid #0000007f' : '1px solid transparent',
+                  borderRadius: 8,
+                  background: selectedSection === 'notifications' ? '#f0f8ff' : 'transparent'
                 }}
               >
                 <Bell size={20} color="#999" /> Notification
               </li>
-              <li style={{ padding: "8px", color: "#0000007f" }}>
+              <li
+                onClick={() => setSelectedSection("security")}
+                style={{
+                  padding: "8px",
+                  color: "#0000007f",
+                  cursor: 'pointer',
+                  border: selectedSection === 'security' ? '1px solid #0000007f' : '1px solid transparent',
+                  borderRadius: 8,
+                  background: selectedSection === 'security' ? '#f0f8ff' : 'transparent'
+                }}
+              >
                 <Lock size={20} color="#999" /> Security
               </li>
             </ul>
@@ -576,9 +610,11 @@ function Settings() {
               flexDirection: "column",
             }}
           >
-            <h3 style={{ marginTop: "0", color: "black" }}>
-              Category Management
-            </h3>
+            {selectedSection === 'categories' && (
+              <>
+                <h3 style={{ marginTop: "0", color: "black" }}>
+                  Category Management
+                </h3>
 
             {/* Tabs */}
             <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
@@ -684,6 +720,121 @@ function Settings() {
             >
               + Add New Category
             </button>
+              </>
+            )}
+
+            {selectedSection === 'profile' && (
+              <div style={{ color: 'black' }}>
+                <h3 style={{ marginTop: 0 }}>Profile</h3>
+                {!isEditingProfile ? (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                      <div>
+                        <label style={{ color: '#6b7280' }}>Name</label>
+                        <div style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}>{profile.name || '—'}</div>
+                      </div>
+                      <div>
+                        <label style={{ color: '#6b7280' }}>Email</label>
+                        <div style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}>{profile.email || '—'}</div>
+                      </div>
+                      <div>
+                        <label style={{ color: '#6b7280' }}>Country</label>
+                        <div style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}>{profile.country || '—'}</div>
+                      </div>
+                      <div>
+                        <label style={{ color: '#6b7280' }}>Income Bracket</label>
+                        <div style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}>{profile.income || '—'}</div>
+                      </div>
+                    </div>
+                    <button style={{ padding: 12, borderRadius: 8, background: '#207ed0', color: 'white', border: 'none' }} onClick={() => setIsEditingProfile(true)}>Edit</button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div>
+                        <label>Name</label>
+                        <input type="text" placeholder="Username" value={profile.name} onChange={(e)=>setProfile({ ...profile, name: e.target.value })} style={{ width: '90%', padding: 12, borderRadius: 8, border: '1px solid #ddd', marginBottom: 12 }} />
+                      </div>
+                      <div>
+                        <label>Email</label>
+                        <input type="email" placeholder="Email" value={profile.email} onChange={(e)=>setProfile({ ...profile, email: e.target.value })} style={{ width: '90%', padding: 12, borderRadius: 8, border: '1px solid #ddd', marginBottom: 12 }} />
+                      </div>
+                      <div>
+                        <label>Country</label>
+                        <select value={profile.country} onChange={(e)=>setProfile({ ...profile, country: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', marginBottom: 12 }}>
+                          <option value="">Select your country</option>
+                          <option value="india">India</option>
+                          <option value="usa">United States</option>
+                          <option value="uk">United Kingdom</option>
+                          <option value="canada">Canada</option>
+                          <option value="australia">Australia</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label>Income Bracket</label>
+                        <select value={profile.income} onChange={(e)=>setProfile({ ...profile, income: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', marginBottom: 12 }}>
+                          <option value="">Select your income bracket</option>
+                          <option value="low">Below $20,000</option>
+                          <option value="mid">20,000 - 50,000</option>
+                          <option value="high">50,000 - 100,000</option>
+                          <option value="very-high">Above 100,000</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button style={{ padding: 12, borderRadius: 8, background: '#207ed0', color: 'white', border: 'none' }} onClick={() => { 
+                        localStorage.setItem('user', JSON.stringify({ ...(JSON.parse(localStorage.getItem('user')||'{}')), ...profile })); 
+                        setIsEditingProfile(false);
+                        toast.success('Profile updated successfully!');
+                      }}>Save Changes</button>
+                      <button style={{ padding: 12, borderRadius: 8, background: 'white', color: '#111827', border: '1px solid #ddd' }} onClick={() => setIsEditingProfile(false)}>Cancel</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {selectedSection === 'notifications' && (
+              <div style={{ color: 'black' }}>
+                <h3 style={{ marginTop: 0 }}>Notifications</h3>
+                <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" defaultChecked /> Email alerts</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" /> SMS alerts</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" defaultChecked /> Product updates</label>
+                </div>
+                <button style={{ padding: 12, borderRadius: 8, background: '#207ed0', color: 'white', border: 'none' }} onClick={() => toast.success('Notification preferences saved!')}>Save Preferences</button>
+              </div>
+            )}
+
+            {selectedSection === 'security' && (
+              <div style={{ color: 'black' }}>
+                <h3 style={{ marginTop: 0 }}>Security</h3>
+                <p style={{ marginBottom: 12 }}>Review device sessions and sign out from this browser.</p>
+                <button style={{ padding: 12, borderRadius: 8, background: '#ef4444', color: 'white', border: 'none' }} onClick={() => {
+                  const id = "securityLogoutConfirm";
+                  if (toast.isActive(id)) return;
+                  toast(
+                    ({ closeToast }) => (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', textAlign: 'center' }}>
+                        <div style={{ fontWeight: 700, color: '#111827' }}>Confirm Logout</div>
+                        <div style={{ color: '#4b5563', fontSize: 14 }}>Are you sure you want to log out of this device?</div>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 6, justifyContent: 'center' }}>
+                          <button onClick={() => closeToast()} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#ffffff', cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => { 
+                            closeToast(); 
+                            localStorage.removeItem('token'); 
+                            localStorage.removeItem('user'); 
+                            toast.info('Logged out successfully', { toastId: 'securityLogoutOnce' });
+                            navigate('/'); 
+                          }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>Confirm</button>
+                        </div>
+                      </div>
+                    ),
+                    { toastId: id, position: 'top-center', autoClose: false, closeOnClick: false, draggable: false, closeButton: false, hideProgressBar: true, icon: false, style: { width: '360px', margin: '0 auto', textAlign: 'center', borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', padding: '16px 20px' } }
+                  );
+                }}>Log out of this device</button>
+              </div>
+            )}
           </div>
         </div>
       </main>

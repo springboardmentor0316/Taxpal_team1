@@ -14,6 +14,8 @@ import SettingPage from "./SettingPage.jsx"
 import "./App.css";
 import TaxEstimator from "./TaxEstimator.jsx";
 import Report from "./Report.jsx";
+import Transactions from "./Transactions.jsx";
+
 function App() {
   
   return (
@@ -31,6 +33,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/report" element={<Report />} />
+        <Route path="/transactions" element={<Transactions />} />
       </Routes>
     </BrowserRouter>
   );

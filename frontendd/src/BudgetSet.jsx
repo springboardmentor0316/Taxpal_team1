@@ -38,7 +38,7 @@ function Budget() {
       path: "/tax-estimator",
       icon: "fa-money-bill-trend-up",
     },
-    { name: "Reports", path: "/reports", icon: "fa-file" },
+    { name: "Reports", path: "/report", icon: "fa-file" },
     { name: "Settings", path: "/setting-page", icon: "fa-gear" },
   ];
 
@@ -359,20 +359,33 @@ function Budget() {
                 </div>
                 <div className="profile-menu">
                   <Link to="/setting-page" className="profile-menu-item">
-                    <i className="fas fa-cog"></i>
-                    Settings
-                  </Link>
-                  <div className="profile-menu-item">
                     <i className="fas fa-user"></i>
-                    Profile
-                  </div>
+                    View Profile
+                  </Link>
                   <div
                     className="profile-menu-item"
                     onClick={() => {
-                      localStorage.removeItem("token");
-                      localStorage.removeItem("user");
-                      toast.info("Logged out successfully");
-                      navigate("/");
+                      const id = "logoutConfirm";
+                      if (toast.isActive(id)) return;
+                      toast(
+                        ({ closeToast }) => (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center", marginLeft: "60px" }}>
+                            <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
+                            <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
+                            <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
+                              <button onClick={() => closeToast()} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => {
+                                closeToast();
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                toast.info("Logged out successfully", { toastId: "logoutOnce" });
+                                navigate("/");
+                              }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
+                            </div>
+                          </div>
+                        ),
+                        { toastId: id, position: "top-center", autoClose: false, closeOnClick: false, draggable: false, closeButton: false, hideProgressBar: true, icon: false, style: { width: "360px", margin: "0 auto", textAlign: "center", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", padding: "16px 20px" } }
+                      );
                     }}
                   >
                     <i className="fas fa-sign-out-alt"></i>
@@ -396,9 +409,11 @@ function Budget() {
                 <span className="text">Dashboard</span>
               </Link>
             </li>
-            <li>
-              <i className="fa-solid fa-check"></i>
-              <span className="text">Transactions</span>
+            <li className={useLocation().pathname === "/transactions" ? "active" : ""}>
+              <Link to="/transactions">
+                <i className="fa-solid fa-check"></i>
+                <span className="text">Transactions</span>
+              </Link>
             </li>
             <li className={useLocation().pathname === "/budget" ? "active" : ""}>
               <i className="fa-solid fa-money-bill"></i>

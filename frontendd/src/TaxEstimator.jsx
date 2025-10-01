@@ -85,7 +85,7 @@ const TaxEstimator = () => {
     { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
     { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
     { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
-    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Reports', path: '/report', icon: 'fa-file' },
     { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
   ];
 
@@ -116,7 +116,6 @@ const TaxEstimator = () => {
 
   const [estimatedTax, setEstimatedTax] = useState(0);
 
-  const [darkMode, setDarkMode] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -493,20 +492,33 @@ const TaxEstimator = () => {
                 </div>
                 <div className="profile-menu">
                   <Link to="/setting-page" className="profile-menu-item">
-                    <i className="fas fa-cog"></i>
-                    Settings
-                  </Link>
-                  <div className="profile-menu-item">
                     <i className="fas fa-user"></i>
-                    Profile
-                  </div>
+                    View Profile
+                  </Link>
                   <div
                     className="profile-menu-item"
                     onClick={() => {
-                      localStorage.removeItem("token");
-                      localStorage.removeItem("user");
-                      toast.info("Logged out successfully");
-                      navigate("/");
+                      const id = "logoutConfirm";
+                      if (toast.isActive(id)) return;
+                      toast(
+                        ({ closeToast }) => (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center", marginLeft: "60px" }}>
+                            <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
+                            <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
+                            <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
+                              <button onClick={() => closeToast()} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => {
+                                closeToast();
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                toast.info("Logged out successfully", { toastId: "logoutOnce" });
+                                navigate("/");
+                              }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
+                            </div>
+                          </div>
+                        ),
+                        { toastId: id, position: "top-center", autoClose: false, closeOnClick: false, draggable: false, closeButton: false, hideProgressBar: true, icon: false, style: { width: "360px", margin: "0 auto", textAlign: "center", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", padding: "16px 20px" } }
+                      );
                     }}
                   >
                     <i className="fas fa-sign-out-alt"></i>
@@ -534,8 +546,8 @@ const TaxEstimator = () => {
                 <span className="text">Dashboard</span>
               </Link>
             </li>
-            <li>
-              <Link to="#">
+            <li className={useLocation().pathname === "/transactions" ? "active" : ""}>
+              <Link to="/transactions">
                 <i className="fa-solid fa-check"></i>
                 <span className="text">Transactions</span>
               </Link>
@@ -575,14 +587,7 @@ const TaxEstimator = () => {
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
-          <div className="dark-mode-toggle">
-            <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
-            <span style={{ marginLeft: "13px" }}>Dark Mode</span>
-            <label className="switch">
-              <input type="checkbox" />
-              <span className="slider"></span>
-            </label>
-          </div>
+
         </div>
       </div>
 
@@ -1283,6 +1288,32 @@ const TaxEstimator = () => {
                                   padding: "4px 8px",
                                   borderRadius: "12px",
                                   fontSize: "12px",
+                                  cursor: event.type === 'payment' ? 'pointer' : 'default'
+                                }}
+                                onClick={() => {
+                                  if (event.type === 'payment') {
+                                    // Add transaction to localStorage
+                                    const newTransaction = {
+                                      id: `TXN${Date.now()}`,
+                                      type: `${event.data.quarter} Estimated Tax Payment`,
+                                      amount: -event.data.estimatedTax,
+                                      date: new Date().toLocaleDateString(),
+                                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                      description: `Quarterly tax payment for ${event.data.quarter}`
+                                    };
+                                    const existingTransactions = JSON.parse(localStorage.getItem('taxTransactions') || '[]');
+                                    existingTransactions.push(newTransaction);
+                                    localStorage.setItem('taxTransactions', JSON.stringify(existingTransactions));
+                                    
+                                    // Show success toast
+                                    toast.success('Tax payment recorded! Redirecting to Transactions', {
+                                      position: 'top-center',
+                                      autoClose: 2000
+                                    });
+                                    
+                                    // Navigate to transactions page after a short delay
+                                    setTimeout(() => navigate('/transactions'), 1000);
+                                  }
                                 }}
                               >
                                 {event.type === 'reminder' ? 'Reminder' : 'Payment'}

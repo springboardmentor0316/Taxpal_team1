@@ -3,12 +3,21 @@ body {
   min-height: 100%;
   background: linear-gradient(180deg, #f1f3f6 0%, #b8cce4 100%);
   background-attachment: fixed;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   font-family: "Aboreto", system-ui;
   margin: 0;
   overflow-y: auto;
+}
+
+.dashboard-container {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  background: transparent;
 }
 
 /* navbar styling */
@@ -488,9 +497,11 @@ body {
   margin-top: 90px;
   padding: 30px 40px;
   background: transparent;
-  min-height: 100vh;
+  min-height: calc(100vh - 90px);
   box-sizing: border-box;
   margin-left: 257px;
+  position: relative;
+  z-index: 1;
 }
 @media (max-width: 900px) {
   .dashboard-content {
@@ -1105,6 +1116,10 @@ textarea {
 }
 
 /* Dark mode styles */
+.dark-mode {
+  background: linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%);
+}
+
 .dark-mode .navbar {
   background: rgba(137, 136, 136, 0.15);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
