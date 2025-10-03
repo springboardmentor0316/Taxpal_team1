@@ -36,14 +36,12 @@ function SignIn() {
     } catch (err) {
       console.error("Login error:", err);
       console.log("Backend unavailable, using localStorage fallback...");
-      
-      // Fallback to localStorage if backend fails
+
       try {
         const users = JSON.parse(localStorage.getItem('users') || '[]');
         const user = users.find(u => u.email === email && u.password === password);
         
         if (user) {
-          // Create a mock token and user object
           const mockToken = 'local_' + Date.now();
           const userData = {
             id: user.id,

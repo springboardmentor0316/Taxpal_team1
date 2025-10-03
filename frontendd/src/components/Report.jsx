@@ -22,14 +22,12 @@ function Report() {
   });
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  
-  // Initialize notifications and user data
+
   useEffect(() => {
     setNotifications(getNotifications());
     setUnreadCount(getUnreadCount());
   }, []);
 
-  // Click outside to close notifications
   useEffect(() => {
     function handleClickOutside(event) {
       if (!event.target.closest('.notification-container')) {
@@ -76,22 +74,18 @@ function Report() {
     e.preventDefault();
     setGenerating(true);
     try {
-      // Create a new report entry with current timestamp
       const newReport = {
         ...formData,
         fileName: `${formData.reportType.toLowerCase().replace(/\\s+/g, '_')}_${Date.now()}.csv`,
         generatedAt: new Date().toISOString()
       };
-      
-      // Create sample CSV content
+
       const csvContent = 'Date,Description,Amount,Type\\n' +
         '2025-09-30,Salary,5000,Income\\n' +
         '2025-09-29,Rent,-1000,Expense';
-      
-      // Create and save the blob
+
       const blob = new Blob([csvContent], { type: 'text/csv' });
-      
-      // Add the new report to the list
+
       const updatedReports = [newReport, ...reports];
       setReports(updatedReports);
       localStorage.setItem('reports', JSON.stringify(updatedReports));

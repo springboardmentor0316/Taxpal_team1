@@ -12,7 +12,6 @@ function Expenses({ onClose, onSave }) {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    // Load expense categories from localStorage
     const savedCategories = localStorage.getItem('expenseCategories');
     if (savedCategories) {
       try {

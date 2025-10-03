@@ -23,7 +23,6 @@ function Budget() {
     return userData ? JSON.parse(userData) : null;
   });
 
-  // Load notifications
   useEffect(() => {
     setNotifications(getNotifications());
     setUnreadCount(getUnreadCount());
@@ -108,7 +107,6 @@ function Budget() {
     } catch (e) {}
   }, [notifications]);
 
-  // Click outside to close notifications
   useEffect(() => {
     function handleClickOutside(event) {
       if (!event.target.closest('.notification-container')) {
@@ -125,7 +123,6 @@ function Budget() {
     } catch (e) {}
   }, [notifications]);
 
-  // Click outside to close notifications
   useEffect(() => {
     function handleClickOutside(event) {
       if (!event.target.closest('.notification-container')) {

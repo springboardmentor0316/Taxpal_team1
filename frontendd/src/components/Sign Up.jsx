@@ -51,7 +51,6 @@ function SignUp() {
         income,
       });
 
-      // Try backend first
       const res = await axios.post(`${API_BASE_URL}/auth/register`, {
         name,
         email,

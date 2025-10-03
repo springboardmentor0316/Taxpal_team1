@@ -1,7 +1,6 @@
-// Notification service to handle notifications across the app
+
 const NOTIFICATION_STORAGE_KEY = 'notifications';
 
-// Get all notifications from localStorage
 export const getNotifications = () => {
   try {
     const notifications = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
@@ -12,7 +11,6 @@ export const getNotifications = () => {
   }
 };
 
-// Add a new notification
 export const addNotification = (notification) => {
   try {
     const notifications = getNotifications();
@@ -33,7 +31,6 @@ export const addNotification = (notification) => {
   }
 };
 
-// Mark a notification as read
 export const markNotificationAsRead = (notificationId) => {
   try {
     const notifications = getNotifications();
@@ -51,7 +48,6 @@ export const markNotificationAsRead = (notificationId) => {
   }
 };
 
-// Clear all notifications
 export const clearNotifications = () => {
   try {
     localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify([]));
@@ -62,7 +58,6 @@ export const clearNotifications = () => {
   }
 };
 
-// Get unread notification count
 export const getUnreadCount = () => {
   try {
     const notifications = getNotifications();

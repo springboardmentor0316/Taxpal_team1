@@ -17,17 +17,14 @@ function Transactions() {
   const [transactions, setTransactions] = useState(() => {
     const storedTransactions = localStorage.getItem('taxTransactions');
     const allTransactions = storedTransactions ? JSON.parse(storedTransactions) : [];
-    // Filter out zero-value transactions
     return allTransactions.filter(txn => txn.amount !== 0 && txn.amount !== "0");
   });
 
-  // Listen for changes to localStorage
   useEffect(() => {
     const handleStorageChange = () => {
       const updatedTransactions = localStorage.getItem('taxTransactions');
       if (updatedTransactions) {
         const allTransactions = JSON.parse(updatedTransactions);
-        // Filter out zero-value transactions
         const nonZeroTransactions = allTransactions.filter(txn => txn.amount !== 0 && txn.amount !== "0");
         setTransactions(nonZeroTransactions);
       }
@@ -46,7 +43,6 @@ function Transactions() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userName, setUserName] = useState("User");
 
-  // Handle clicks outside notifications
   useEffect(() => {
     function handleClickOutside(event) {
       if (!event.target.closest(".notification-container")) {
@@ -75,13 +71,11 @@ function Transactions() {
     { name: "Reports", path: "/reports", icon: "fa-file" },
   ];
 
-  // Load notifications
   useEffect(() => {
     setNotifications(getNotifications());
     setUnreadCount(getUnreadCount());
   }, []);
 
-  // Initialize user info
   useEffect(() => {
     const userInfo = localStorage.getItem("user");
     if (userInfo) {

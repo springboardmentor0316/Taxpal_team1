@@ -12,7 +12,6 @@ function Income({ onClose, onSave }) {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    // Load income categories from localStorage
     const savedCategories = localStorage.getItem('incomeCategories');
     if (savedCategories) {
       try {

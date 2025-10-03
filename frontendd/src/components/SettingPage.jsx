@@ -21,7 +21,6 @@ function Settings() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userName, setUserName] = useState("User");
 
-  // Load notifications and user info
   useEffect(() => {
     setNotifications(getNotifications());
     setUnreadCount(getUnreadCount());
@@ -147,7 +146,6 @@ function Settings() {
     }
   };
 
-  // Save categories to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(
       "expenseCategories",
@@ -165,7 +163,6 @@ function Settings() {
     } catch (e) {}
   }, [notifications]);
 
-  // Click outside to close notifications and profile
   useEffect(() => {
     function handleClickOutside(event) {
       if (!event.target.closest('.notification-container')) {

@@ -74,7 +74,6 @@ const TaxEstimator = () => {
     return userData ? JSON.parse(userData) : null;
   });
 
-  // Load notifications
   useEffect(() => {
     setNotifications(getNotifications());
     setUnreadCount(getUnreadCount());
@@ -141,11 +140,8 @@ const TaxEstimator = () => {
   }, []);
 
   const handleInputChange = (field, value) => {
-    // For numeric fields, validate input
     if (['grossIncome', 'businessExpenses', 'retirementContributions', 'healthInsurance', 'homeOfficeDeduction'].includes(field)) {
-      // Allow only numbers, decimal point, and backspace
       if (!/^\d*\.?\d*$/.test(value) && value !== '') {
-        // If invalid input, don't update the state
         toast.error("Please enter numbers only");
         return;
       }
@@ -206,12 +202,10 @@ const TaxEstimator = () => {
     
     localStorage.setItem("taxEstimatesHistory", JSON.stringify(existingHistory));
 
-    // Add notification for the tax payment reminder
     if (estimatedTax > 0) {
       const notificationTitle = `Tax Payment Reminder: ${quarter}`;
       const notificationMessage = `Your estimated tax payment of ₹${estimatedTax.toLocaleString()} for ${quarter} is due on ${new Date(quarterInfo.dueDate).toLocaleDateString()}. Please ensure timely payment to avoid penalties.`;
-      
-      // Add immediate notification for the newly created tax estimate
+
       addNotification({
         title: notificationTitle,
         message: notificationMessage,
@@ -219,7 +213,6 @@ const TaxEstimator = () => {
         date: new Date().toISOString()
       });
 
-      // Add a notification for the reminder date
       const reminderDate = new Date(quarterInfo.reminderDate);
       if (reminderDate > new Date()) {
         addNotification({
@@ -230,7 +223,6 @@ const TaxEstimator = () => {
         });
       }
 
-      // Add notification for the due date
       const dueDate = new Date(quarterInfo.dueDate);
       if (dueDate > new Date()) {
         addNotification({
@@ -252,14 +244,12 @@ const TaxEstimator = () => {
     setLoading(true);
     setError(null);
 
-    // Convert values to numbers for validation
     const grossIncome = parseFloat(formData.grossIncome) || 0;
     const businessExpenses = parseFloat(formData.businessExpenses) || 0;
     const retirementContributions = parseFloat(formData.retirementContributions) || 0;
     const healthInsurance = parseFloat(formData.healthInsurance) || 0;
     const homeOfficeDeduction = parseFloat(formData.homeOfficeDeduction) || 0;
 
-    // Form validation
     if (!formData.grossIncome.trim() || grossIncome === 0) {
       setError("Gross Income must be greater than zero");
       setLoading(false);
@@ -1347,7 +1337,6 @@ const TaxEstimator = () => {
                                 }}
                                 onClick={() => {
                                   if (event.type === 'payment') {
-                                    // Add transaction to localStorage
                                     const newTransaction = {
                                       id: `TXN${Date.now()}`,
                                       type: `${event.data.quarter} Estimated Tax Payment`,
@@ -1360,13 +1349,11 @@ const TaxEstimator = () => {
                                     existingTransactions.push(newTransaction);
                                     localStorage.setItem('taxTransactions', JSON.stringify(existingTransactions));
                                     
-                                    // Show success toast
                                     toast.success('Tax payment recorded! Redirecting to Transactions', {
                                       position: 'top-center',
                                       autoClose: 2000
                                     });
                                     
-                                    // Navigate to transactions page after a short delay
                                     setTimeout(() => navigate('/transactions'), 1000);
                                   }
                                 }}

@@ -96,7 +96,6 @@ function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Load notifications
   useEffect(() => {
     setNotifications(getNotifications());
     setUnreadCount(getUnreadCount());
@@ -216,12 +215,10 @@ function Dashboard() {
     const now = new Date();
     const y = now.getFullYear();
     const m = now.getMonth();
-    
-    // For current month
+
     const startOfMonth = new Date(y, m, 1);
     const endOfMonth = new Date(y, m + 1, 0);
-    
-    // For previous month
+
     const startOfPrevMonth = new Date(y, m - 1, 1);
     const endOfPrevMonth = new Date(y, m, 0);
 
@@ -236,8 +233,7 @@ function Dashboard() {
       if (isNaN(d)) continue;
 
       const amount = Number(t.amount || 0);
-      
-      // Current month transactions
+ 
       if (d >= startOfMonth && d <= endOfMonth) {
         if (t.type === "income") {
           income += amount;
@@ -245,7 +241,6 @@ function Dashboard() {
           expenses += amount;
         }
       }
-      // Previous month transactions
       else if (d >= startOfPrevMonth && d <= endOfPrevMonth) {
         if (t.type === "income") {
           pincome += amount;
@@ -255,7 +250,6 @@ function Dashboard() {
       }
     }
 
-    // Ensure totals are non-negative
     income = Math.max(0, income);
     expenses = Math.max(0, expenses);
     pincome = Math.max(0, pincome);
@@ -267,7 +261,6 @@ function Dashboard() {
     };
   }, [transactions]);
 
-  // Recent Tax Payments: filter transactions that look like tax-related
   const recentTaxPayments = useMemo(() => {
     const looksLikeTax = (t) => {
       const cat = (t.category || '').toString().toLowerCase();
@@ -317,7 +310,6 @@ function Dashboard() {
     }
   }, []);
 
-  // Click outside to close notifications
   useEffect(() => {
     function handleClickOutside(event) {
       if (!event.target.closest('.notification-container')) {
@@ -746,14 +738,12 @@ function Dashboard() {
                 const expenses = monthTotals.expenses;
                 const prevIncome = prevMonthTotals.income || 0;
                 const prevExpenses = prevMonthTotals.expenses || 0;
-                
-                // Calculate current and previous savings rates
+
                 const savings = Math.max(0, income - expenses);
                 const prevSavings = Math.max(0, prevIncome - prevExpenses);
                 const savingsRate = income > 0 ? Math.min(100, Math.max(0, (savings / income) * 100)) : 0;
                 const prevSavingsRate = prevIncome > 0 ? Math.min(100, Math.max(0, (prevSavings / prevIncome) * 100)) : 0;
-                
-                // Calculate the percentage change in savings rate, capped at 100%
+
                 let rateChange;
                 if (prevSavingsRate === 0) {
                   rateChange = savingsRate > 0 ? Math.min(100, savingsRate) : 0;
