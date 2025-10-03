@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { User, Tag, Bell, Lock, SquarePen, X } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import logo from "../img/taxpal1.png";
+import logo from "../../img/taxpal1.png";
 import { toast } from "react-toastify";
 import {
   getNotifications,
   markNotificationAsRead,
   getUnreadCount,
   clearNotifications
-} from "./config/notificationService";
+} from "../config/notificationService";
 
 function Settings() {
   const navigate = useNavigate();

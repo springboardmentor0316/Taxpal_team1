@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import logo from "../img/taxpal1.png";
+import logo from "../../img/taxpal1.png";
 import {
   getNotifications,
   markNotificationAsRead,
   getUnreadCount,
   addNotification
-} from "./config/notificationService";
-import { API_ENDPOINTS } from "./config/api";
+} from "../config/notificationService";
+import { API_ENDPOINTS } from "../config/api";
 const getDueDate = (quarter) => {
   const year = new Date().getFullYear();
   const dueDates = {
@@ -205,6 +205,42 @@ const TaxEstimator = () => {
     existingHistory.push(taxData);
     
     localStorage.setItem("taxEstimatesHistory", JSON.stringify(existingHistory));
+
+    // Add notification for the tax payment reminder
+    if (estimatedTax > 0) {
+      const notificationTitle = `Tax Payment Reminder: ${quarter}`;
+      const notificationMessage = `Your estimated tax payment of ₹${estimatedTax.toLocaleString()} for ${quarter} is due on ${new Date(quarterInfo.dueDate).toLocaleDateString()}. Please ensure timely payment to avoid penalties.`;
+      
+      // Add immediate notification for the newly created tax estimate
+      addNotification({
+        title: notificationTitle,
+        message: notificationMessage,
+        type: 'reminder',
+        date: new Date().toISOString()
+      });
+
+      // Add a notification for the reminder date
+      const reminderDate = new Date(quarterInfo.reminderDate);
+      if (reminderDate > new Date()) {
+        addNotification({
+          title: `Upcoming ${quarter} Tax Payment`,
+          message: `Reminder: Your quarterly tax payment of ₹${estimatedTax.toLocaleString()} is due in 2 weeks. Due date: ${new Date(quarterInfo.dueDate).toLocaleDateString()}.`,
+          type: 'reminder',
+          date: reminderDate.toISOString()
+        });
+      }
+
+      // Add notification for the due date
+      const dueDate = new Date(quarterInfo.dueDate);
+      if (dueDate > new Date()) {
+        addNotification({
+          title: `${quarter} Tax Payment Due Today`,
+          message: `Your quarterly tax payment of ₹${estimatedTax.toLocaleString()} is due today. Please ensure to make the payment to avoid any penalties.`,
+          type: 'reminder',
+          date: dueDate.toISOString()
+        });
+      }
+    }
     
     toast.success("Tax calculation complete. Reminders have been scheduled.", {
       position: "top-center",
@@ -587,7 +623,25 @@ const TaxEstimator = () => {
             <i style={{ width: "30px" }} className="fa-solid fa-gear"></i>
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
-
+          <div className="dark-mode-toggle">
+            <i
+              style={{
+                width: "20px",
+              }}
+              className="fa-solid fa-moon"
+            ></i>
+            <span
+              style={{
+                marginLeft: "13px",
+              }}
+            >
+              Dark Mode
+            </span>
+            <label className="switch">
+              <input type="checkbox" />
+              <span className="slider"></span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -1187,7 +1241,8 @@ const TaxEstimator = () => {
 
           {(() => {
             
-            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
+            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]")
+              .filter(estimate => estimate.estimatedTax !== 0 && estimate.estimatedTax !== "0");
 
             allEstimates.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 

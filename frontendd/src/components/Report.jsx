@@ -6,10 +6,10 @@ import {
   getNotifications,
   markNotificationAsRead,
   getUnreadCount
-} from "./config/notificationService";
-import { API_BASE_URL } from "./config";
-import "./Dashboard.css";
-import logo from "../img/taxpal1.png";
+} from "../config/notificationService";
+import { API_BASE_URL } from "../config";
+import "../Dashboard.css";
+import logo from "../../img/taxpal1.png";
 
 function Report() {
   const navigate = useNavigate();

@@ -1,17 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config.js";
 import {
   getNotifications,
   markNotificationAsRead,
   getUnreadCount
-} from "./config/notificationService";
+} from "../config/notificationService.js";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
+import "../Dashboard.css";
 import Income from "./Income.jsx";
 import Expenses from "./Expenses.jsx";
-import logo from "../img/taxpal1.png";
+import logo from "../../img/taxpal1.png";
 
 const COLOR_PRIMARY = "#1D4ED8"; 
 const COLOR_SKY = "#38BDF8"; 

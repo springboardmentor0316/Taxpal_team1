@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config";
 import { useLocation } from "react-router-dom";
 
 function OtpInput() {

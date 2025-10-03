@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
-import logo from "../img/taxpal1.png";
+import "../Dashboard.css";
+import logo from "../../img/taxpal1.png";
 import {
   getNotifications,
   markNotificationAsRead,
   getUnreadCount,
-} from "./config/notificationService";
+} from "../config/notificationService";
 
 function Transactions() {
   const navigate = useNavigate();
@@ -16,7 +16,9 @@ function Transactions() {
 
   const [transactions, setTransactions] = useState(() => {
     const storedTransactions = localStorage.getItem('taxTransactions');
-    return storedTransactions ? JSON.parse(storedTransactions) : [];
+    const allTransactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+    // Filter out zero-value transactions
+    return allTransactions.filter(txn => txn.amount !== 0 && txn.amount !== "0");
   });
 
   // Listen for changes to localStorage
@@ -24,7 +26,10 @@ function Transactions() {
     const handleStorageChange = () => {
       const updatedTransactions = localStorage.getItem('taxTransactions');
       if (updatedTransactions) {
-        setTransactions(JSON.parse(updatedTransactions));
+        const allTransactions = JSON.parse(updatedTransactions);
+        // Filter out zero-value transactions
+        const nonZeroTransactions = allTransactions.filter(txn => txn.amount !== 0 && txn.amount !== "0");
+        setTransactions(nonZeroTransactions);
       }
     };
 

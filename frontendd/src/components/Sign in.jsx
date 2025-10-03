@@ -3,7 +3,7 @@ import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config";
 
 function SignIn() {
   const [email, setEmail] = useState("");

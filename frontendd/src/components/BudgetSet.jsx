@@ -1,13 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
+import "../Dashboard.css";
 import {
   getNotifications,
   markNotificationAsRead,
   getUnreadCount
-} from "./config/notificationService";
-import logo from "../img/taxpal1.png";
+} from "../config/notificationService";
+import logo from "../../img/taxpal1.png";
 
 function Budget() {
   const navigate = useNavigate();
