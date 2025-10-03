@@ -24,9 +24,8 @@ const toCSV = (transactions) => {
 export const generateReport = async (req, res) => {
     try {
         const { reportType, period, format } = req.body;
-        const userId = req.user._id; // Assuming you have user authentication middleware
+        const userId = req.user._id; 
 
-        // Fetch transactions based on period
         let startDate = new Date();
         let endDate = new Date();
         
@@ -52,11 +51,11 @@ export const generateReport = async (req, res) => {
         const fileName = `${reportType.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.csv`;
         const filePath = path.join(__dirname, '../reports', fileName);
         
-        // Generate CSV content
+        
         const csvContent = toCSV(transactions);
         await fs.writeFile(filePath, csvContent);
 
-        // Create report metadata
+       
         const report = {
             fileName,
             reportType,
@@ -81,7 +80,7 @@ export const downloadReport = async (req, res) => {
         const { fileName } = req.params;
         const filePath = path.join(__dirname, '../reports', fileName);
         
-        await fs.access(filePath); // Check if file exists
+        await fs.access(filePath); 
         res.download(filePath);
     } catch (error) {
         console.error('Error downloading report:', error);
@@ -95,7 +94,6 @@ export const deleteReport = async (req, res) => {
         const filePath = path.join(__dirname, '../reports', fileName);
         
         await fs.unlink(filePath);
-        // Also remove from database if you're storing metadata
         
         res.status(200).json({ message: 'Report deleted successfully' });
     } catch (error) {
