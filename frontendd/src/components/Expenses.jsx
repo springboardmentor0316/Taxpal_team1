@@ -1,6 +1,6 @@
-import "./Dashboard.css";
+import "../Dashboard.css";
 import axios from "axios";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config";
 import { useState, useEffect } from "react";
 
 function getAuthHeaders() {
@@ -12,7 +12,6 @@ function Expenses({ onClose, onSave }) {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    // Load expense categories from localStorage
     const savedCategories = localStorage.getItem('expenseCategories');
     if (savedCategories) {
       try {

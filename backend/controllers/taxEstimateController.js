@@ -1,14 +1,11 @@
 import TaxEstimate from '../models/TaxEstimate.js';
 
 const calculateTax = (grossIncome, deductions, filingStatus) => {
- 
   const income = Number(grossIncome) || 0;
   const deductionsTotal = Object.values(deductions).reduce((sum, val) => sum + (Number(val) || 0), 0);
-  
-  
+
   const taxableIncome = Math.max(0, income - deductionsTotal);
-  
-  
+
   const brackets = {
     single: [
       { upTo: 40000, rate: 0.10 },
@@ -30,9 +27,7 @@ const calculateTax = (grossIncome, deductions, filingStatus) => {
     ]
   };
 
-  
   const bracketToUse = brackets[filingStatus.toLowerCase() === 'single' ? 'single' : 'married'];
-  
   
   let remainingIncome = taxableIncome;
   let totalTax = 0;
@@ -51,7 +46,6 @@ const calculateTax = (grossIncome, deductions, filingStatus) => {
     if (remainingIncome <= 0) break;
   }
 
-  
   const quarterlyTax = totalTax / 4;
 
   return {
@@ -78,7 +72,6 @@ export const createTaxEstimate = async (req, res) => {
   try {
     console.log('Received tax estimate request:', req.body);
 
-    
     const requiredFields = ['userId', 'quarter', 'country', 'state', 'filingStatus', 'grossIncome'];
     const missingFields = requiredFields.filter(field => !req.body[field]);
     
@@ -96,7 +89,7 @@ export const createTaxEstimate = async (req, res) => {
       state,
       filingStatus,
       grossIncome,
-      deductions = {}
+      deductions = {} 
     } = req.body;
 
     const taxCalculation = calculateTax(grossIncome, deductions, filingStatus);

@@ -3,7 +3,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config";
 
 function SetNewPassword() {
   const location = useLocation();

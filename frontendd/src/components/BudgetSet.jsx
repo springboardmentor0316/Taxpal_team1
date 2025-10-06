@@ -1,14 +1,32 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
-import logo from "../img/taxpal1.png";
+import "../Dashboard.css";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  getUnreadCount
+} from "../config/notificationService";
+import logo from "../../img/taxpal1.png";
 
 function Budget() {
   const navigate = useNavigate();
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [user, setUser] = useState(() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  });
+
+  useEffect(() => {
+    setNotifications(getNotifications());
+    setUnreadCount(getUnreadCount());
+  }, []);
 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard", icon: "fa-bars" },
@@ -19,7 +37,7 @@ function Budget() {
       path: "/tax-estimator",
       icon: "fa-money-bill-trend-up",
     },
-    { name: "Reports", path: "/reports", icon: "fa-file" },
+    { name: "Reports", path: "/report", icon: "fa-file" },
     { name: "Settings", path: "/setting-page", icon: "fa-gear" },
   ];
 
@@ -82,6 +100,38 @@ function Budget() {
       localStorage.setItem("budgets", JSON.stringify(budgets));
     } catch (e) {}
   }, [budgets]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+    } catch (e) {}
+  }, [notifications]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest('.notification-container')) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+    } catch (e) {}
+  }, [notifications]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest('.notification-container')) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleCreateBudget = (e) => {
     e.preventDefault();
@@ -205,105 +255,144 @@ function Budget() {
               )}
             </div>
           </div>
-          <i className="fa fa-bell"></i>
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
-            alt="User Profile"
-            className="avatar"
-          />
-          <button
-            className="logout-btn"
-            onClick={() => {
-              const id = "logoutConfirm";
-              if (toast.isActive(id)) return;
-              toast(
-                ({ closeToast }) => (
+          <div className="notification-container" style={{ position: 'relative' }}>
+            <i 
+              className="fa fa-bell" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setUnreadCount(0);
+                notifications.forEach(n => {
+                  if (!n.read) {
+                    markNotificationAsRead(n.id);
+                  }
+                });
+                setNotifications(getNotifications());
+              }}
+            ></i>
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#f44336',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: '12px',
+              }}>
+                {notifications.length}
+              </span>
+            )}
+            {showNotifications && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                width: '300px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: 'white',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                borderRadius: '8px',
+                zIndex: 1000,
+              }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
+                    No new notifications
+                  </div>
+                ) : (
+                  <div>
+                    {notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '12px',
+                          borderBottom: '1px solid #eee',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                            {notification.title}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#666' }}>
+                            {notification.message}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                            {new Date(notification.date).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="profile-container">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+              alt="User Profile"
+              className="avatar"
+              onClick={() => {
+                setShowProfileMenu(!showProfileMenu);
+                setShowNotifications(false);
+              }}
+            />
+            {showProfileMenu && (
+              <div className="profile-dropdown">
+                <div className="profile-header">
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+                    alt="Profile"
+                  />
+                  <div className="profile-info">
+                    <h4>{user?.name || 'User'}</h4>
+                    <p>{user?.email || 'user@example.com'}</p>
+                  </div>
+                </div>
+                <div className="profile-menu">
+                  <Link to="/setting-page" className="profile-menu-item">
+                    <i className="fas fa-user"></i>
+                    View Profile
+                  </Link>
                   <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                      alignItems: "center",
-                      textAlign: "center",
-                      marginLeft: "60px",
+                    className="profile-menu-item"
+                    onClick={() => {
+                      const id = "logoutConfirm";
+                      if (toast.isActive(id)) return;
+                      toast(
+                        ({ closeToast }) => (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center", marginLeft: "60px" }}>
+                            <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
+                            <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
+                            <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
+                              <button onClick={() => closeToast()} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => {
+                                closeToast();
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                toast.info("Logged out successfully", { toastId: "logoutOnce" });
+                                navigate("/");
+                              }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
+                            </div>
+                          </div>
+                        ),
+                        { toastId: id, position: "top-center", autoClose: false, closeOnClick: false, draggable: false, closeButton: false, hideProgressBar: true, icon: false, style: { width: "360px", margin: "0 auto", textAlign: "center", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", padding: "16px 20px" } }
+                      );
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: "#111827" }}>
-                      Confirm Logout
-                    </div>
-                    <div style={{ color: "#4b5563", fontSize: 14 }}>
-                      Are you sure you want to log out?
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        marginTop: 6,
-                        justifyContent: "center",
-                      }}
-                    >
-                      <button
-                        onClick={() => {
-                          closeToast();
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: 8,
-                          border: "1px solid #d1d5db",
-                          background: "#ffffff",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          closeToast();
-                          localStorage.removeItem("token");
-                          localStorage.removeItem("user");
-                          toast.info("Logged out successfully", {
-                            toastId: "logoutOnce",
-                          });
-                          navigate("/");
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: 8,
-                          border: "none",
-                          background: "#207ed0",
-                          color: "#ffffff",
-                          cursor: "pointer",
-                          fontWeight: 600,
-                        }}
-                      >
-                        Confirm
-                      </button>
-                    </div>
+                    <i className="fas fa-sign-out-alt"></i>
+                    Logout
                   </div>
-                ),
-                {
-                  toastId: id,
-                  position: "top-center",
-                  autoClose: false,
-                  closeOnClick: false,
-                  draggable: false,
-                  closeButton: false,
-                  hideProgressBar: true,
-                  icon: false,
-                  style: {
-                    width: "360px",
-                    margin: "0 auto",
-                    textAlign: "center",
-                    borderRadius: 12,
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-                    padding: "16px 20px",
-                  },
-                }
-              );
-            }}
-          >
-            Logout
-          </button>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -317,11 +406,13 @@ function Budget() {
                 <span className="text">Dashboard</span>
               </Link>
             </li>
-            <li>
-              <i className="fa-solid fa-check"></i>
-              <span className="text">Transactions</span>
+            <li className={useLocation().pathname === "/transactions" ? "active" : ""}>
+              <Link to="/transactions">
+                <i className="fa-solid fa-check"></i>
+                <span className="text">Transactions</span>
+              </Link>
             </li>
-            <li>
+            <li className={useLocation().pathname === "/budget" ? "active" : ""}>
               <i className="fa-solid fa-money-bill"></i>
               <span style={{ marginLeft: "16px" }} className="text">
                 Budget
@@ -334,10 +425,12 @@ function Budget() {
               </Link>
             </li>
             <li>
+              <Link to="/report">
               <i className="fa-solid fa-file"></i>
               <span style={{ marginLeft: "23px" }} className="text">
                 Reports
               </span>
+              </Link>
             </li>
           </ul>
         </nav>

@@ -2,17 +2,19 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SignUp from "./Sign Up.jsx";
-import SignIn from "./Sign in.jsx";
-import OtpInput from "./Otp.jsx";
-import VerifyEmail from "./VerifyEmail.jsx";
-import Dashboard from "./Dashboard.jsx";
-import ResetPassword from "./resetPassword.jsx";
-import SetNewPassword from "./SetNewPassword.jsx";
-import Budget from "./BudgetSet.jsx"
-import SettingPage from "./SettingPage.jsx"
+import SignUp from "./components/Sign Up.jsx";
+import SignIn from "./components/Sign in.jsx";
+import OtpInput from "./components/Otp.jsx";
+import VerifyEmail from "./components/VerifyEmail.jsx";
+import Dashboard from "./components/Dashboard.jsx";
+import ResetPassword from "./components/resetPassword.jsx";
+import SetNewPassword from "./components/SetNewPassword.jsx";
+import Budget from "./components/BudgetSet.jsx"
+import SettingPage from "./components/SettingPage.jsx"
 import "./App.css";
-import TaxEstimator from "./TaxEstimator.jsx";
+import TaxEstimator from "./components/TaxEstimator.jsx";
+import Report from "./components/Report.jsx";
+import Transactions from "./components/Transactions.jsx";
 
 function App() {
   
@@ -30,6 +32,8 @@ function App() {
         <Route path="/tax-estimator" element={<TaxEstimator />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
+        <Route path="/report" element={<Report />} />
+        <Route path="/transactions" element={<Transactions />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,33 +1,37 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config.js";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  getUnreadCount
+} from "../config/notificationService.js";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
-import "./darkMode.css";
+import "../Dashboard.css";
 import Income from "./Income.jsx";
 import Expenses from "./Expenses.jsx";
-import logo from "../img/taxpal1.png";
-// Chart colors (Tailwind-like): expanded blue palette derived from provided color
-const COLOR_PRIMARY = "#1D4ED8"; // Primary/600-base
-const COLOR_SKY = "#38BDF8"; // Additional/sky
+import logo from "../../img/taxpal1.png";
+
+const COLOR_PRIMARY = "#1D4ED8"; 
+const COLOR_SKY = "#38BDF8"; 
 const PIE_COLORS = [
-  "#1D4ED8", // blue-700
-  "#2563EB", // blue-600
-  "#3B82F6", // blue-500
-  "#60A5FA", // blue-400
-  "#93C5FD", // blue-300
-  "#BFDBFE", // blue-200
-  "#DBEAFE", // blue-100
-  "#38BDF8", // sky-400
-  "#22D3EE", // cyan-400
-  "#A5F3FC", // cyan-200
-  "#E0F2FE", // sky-100
-  "#BAE6FD", // sky-200
+  "#1D4ED8", 
+  "#2563EB", 
+  "#3B82F6", 
+  "#60A5FA", 
+  "#93C5FD", 
+  "#BFDBFE", 
+  "#DBEAFE", 
+  "#38BDF8", 
+  "#22D3EE", 
+  "#A5F3FC", 
+  "#E0F2FE", 
+  "#BAE6FD", 
 ];
-// Bar chart sizing
-const BAR_WIDTH = 13; // px
-const BAR_GAP = 5; // px
+
+const BAR_WIDTH = 13; 
+const BAR_GAP = 5; 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -81,7 +85,6 @@ function Dashboard() {
   const [animateIn, setAnimateIn] = useState(false);
   const [pieProgress, setPieProgress] = useState(0);
   const [chartRange, setChartRange] = useState("this_week");
-  const [darkMode, setDarkMode] = useState(false);
 
   const [showIncome, setShowIncome] = useState(false);
   const [showExpenses, setShowExpenses] = useState(false);
@@ -91,13 +94,19 @@ function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    setNotifications(getNotifications());
+    setUnreadCount(getUnreadCount());
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
     { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
     { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
     { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
-    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Reports', path: '/report', icon: 'fa-file' },
     { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
   ];
 
@@ -114,23 +123,6 @@ function Dashboard() {
     setSearchResults(filtered);
   };
 
-  // Handle dark mode toggle
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    document.body.classList.toggle('dark-mode');
-    // Save dark mode preference
-    localStorage.setItem('darkMode', newDarkMode.toString());
-  };
-
-  // Initialize dark mode from localStorage
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(savedDarkMode);
-    if (savedDarkMode) {
-      document.body.classList.add('dark-mode');
-    }
-  }, []);
 
   const [transactions, setTransactions] = useState(() => {
     try {
@@ -223,34 +215,70 @@ function Dashboard() {
     const now = new Date();
     const y = now.getFullYear();
     const m = now.getMonth();
-    const prev = new Date(y, m - 1, 1);
-    const py = prev.getFullYear();
-    const pm = prev.getMonth();
+
+    const startOfMonth = new Date(y, m, 1);
+    const endOfMonth = new Date(y, m + 1, 0);
+
+    const startOfPrevMonth = new Date(y, m - 1, 1);
+    const endOfPrevMonth = new Date(y, m, 0);
+
     let income = 0;
     let expenses = 0;
     let pincome = 0;
     let pexpenses = 0;
+
     for (const t of transactions) {
       if (!t.date) continue;
       const d = new Date(t.date);
       if (isNaN(d)) continue;
-      if (d.getFullYear() === y && d.getMonth() === m) {
-        if (t.type === "income") income += Number(t.amount || 0);
-        else if (t.type === "expense") expenses += Number(t.amount || 0);
-      } else if (d.getFullYear() === py && d.getMonth() === pm) {
-        if (t.type === "income") pincome += Number(t.amount || 0);
-        else if (t.type === "expense") pexpenses += Number(t.amount || 0);
+
+      const amount = Number(t.amount || 0);
+ 
+      if (d >= startOfMonth && d <= endOfMonth) {
+        if (t.type === "income") {
+          income += amount;
+        } else if (t.type === "expense") {
+          expenses += amount;
+        }
+      }
+      else if (d >= startOfPrevMonth && d <= endOfPrevMonth) {
+        if (t.type === "income") {
+          pincome += amount;
+        } else if (t.type === "expense") {
+          pexpenses += amount;
+        }
       }
     }
-    return {
+
+    income = Math.max(0, income);
+    expenses = Math.max(0, expenses);
+    pincome = Math.max(0, pincome);
+    pexpenses = Math.max(0, pexpenses);
+
+      return {
       monthTotals: { income, expenses },
       prevMonthTotals: { income: pincome, expenses: pexpenses },
     };
   }, [transactions]);
 
-  const formatINR = (n) => `₹${Number(n || 0).toFixed(2)}`;
+  const recentTaxPayments = useMemo(() => {
+    const looksLikeTax = (t) => {
+      const cat = (t.category || '').toString().toLowerCase();
+      const typ = (t.type || '').toString().toLowerCase();
+      const desc = (t.description || '').toString().toLowerCase();
+      return (
+        cat.includes('tax') ||
+        typ === 'tax' ||
+        desc.includes('tax')
+      );
+    };
+    const sorted = [...transactions]
+      .filter(looksLikeTax)
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    return sorted.slice(0, 8);
+  }, [transactions]);
 
-  const expenseBreakdown = useMemo(() => {
+  const formatINR = (n) => `₹${Number(n || 0).toFixed(2)}`;  const expenseBreakdown = useMemo(() => {
     const byCat = transactions
       .filter((t) => t.type === "expense")
       .reduce((map, t) => {
@@ -282,10 +310,15 @@ function Dashboard() {
     }
   }, []);
 
-  const handleNotificationClick = (index) => {
-    const updatedNotifications = notifications.filter((_, i) => i !== index);
-    setNotifications(updatedNotifications);
-  };
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest('.notification-container')) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     const id = "logoutConfirm";
@@ -379,18 +412,11 @@ function Dashboard() {
   };
 
   return (
-    <div className={`dashboard-container ${darkMode ? 'dark-mode' : ''}`} style={{
-      background: darkMode ? 'linear-gradient(180deg, #004284 0%, #003160 25%, #001D37 53%, #001526 100%)' : '',
-      color: darkMode ? '#fff' : 'inherit'
-    }}>
-      <div className="navbar" style={{
-        background: darkMode ? 'rgba(137, 136, 136, 0.15)' : '',
-        color: darkMode ? '#fff' : 'inherit',
-        borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : ''
-      }}>
+    <div className="dashboard-container">
+      <div className="navbar">
         <div className="brand">
           <img src={logo} alt="Taxpal Logo" />
-          <span className="tagline" style={{ color: darkMode ? '#fff' : 'inherit' }}>Your trusted tax partner</span>
+          <span className="tagline">Your trusted tax partner</span>
         </div>
         <div className="nav-icons">
           <div className="search-container">
@@ -440,44 +466,80 @@ function Dashboard() {
               )}
             </div>
           </div>
-          <div style={{ position: 'relative' }}>
-            <i className="fa fa-bell" onClick={() => setShowNotifications(!showNotifications)}></i>
-            {notifications.length > 0 && (
-              <span className="notification-badge">{notifications.length}</span>
+          <div className="notification-container" style={{ position: 'relative' }}>
+            <i 
+              className="fa fa-bell" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setUnreadCount(0);
+                notifications.forEach(n => {
+                  if (!n.read) {
+                    markNotificationAsRead(n.id);
+                  }
+                });
+                setNotifications(getNotifications());
+              }}
+            ></i>
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#f44336',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: '12px',
+              }}>
+                {unreadCount}
+              </span>
             )}
             {showNotifications && (
-              <div className="notifications-dropdown">
-                <div className="notifications-header">
-                  <h3>Notifications</h3>
-                  {notifications.length > 0 && (
-                    <button 
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#2471e5',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
-                      onClick={() => setNotifications([])}
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-                <div className="notification-list">
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-                      No new notifications
-                    </div>
-                  ) : (
-                    notifications.map((notification, index) => (
-                      <div key={index} className="notification-item" onClick={() => handleNotificationClick(index)}>
-                        <div className="notification-content">{notification.content}</div>
-                        <div className="notification-time">{notification.time}</div>
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                width: '300px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: 'white',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                borderRadius: '8px',
+                zIndex: 1000,
+              }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
+                    No new notifications
+                  </div>
+                ) : (
+                  <div>
+                    {notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '12px',
+                          borderBottom: '1px solid #eee',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                            {notification.title}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#666' }}>
+                            {notification.message}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                            {new Date(notification.date).toLocaleString()}
+                          </div>
+                        </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -505,10 +567,6 @@ function Dashboard() {
                     <i className="fa-solid fa-user"></i>
                     <span>View Profile</span>
                   </Link>
-                  <div className="profile-menu-item" onClick={() => navigate('/setting-page')}>
-                    <i className="fa-solid fa-gear"></i>
-                    <span>Settings</span>
-                  </div>
                   <div className="profile-menu-item" onClick={handleLogout}>
                     <i className="fa-solid fa-right-from-bracket"></i>
                     <span>Logout</span>
@@ -517,17 +575,7 @@ function Dashboard() {
               </div>
             )}
           </div>
-          <button 
-            className="logout-btn" 
-            onClick={handleLogout}
-            style={{
-              background: darkMode ? 'rgba(137, 136, 136, 0.15)' : '',
-              color: darkMode ? '#fff' : 'inherit',
-              border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : ''
-            }}
-          >
-            Logout
-          </button>
+
         </div>
       </div>
 
@@ -546,7 +594,7 @@ function Dashboard() {
               </Link>
             </li>
             <li>
-              <Link to="#">
+              <Link to="/transactions">
                 <i className="fa-solid fa-check"></i>
                 <span className="text">Transactions</span>
               </Link>
@@ -573,8 +621,10 @@ function Dashboard() {
                 </span>
               </Link>
             </li>
-            <li>
-              <Link to="#">
+            <li  className={
+                useLocation().pathname === "/report" ? "active" : ""
+              }>
+              <Link to="/report">
                 <i className="fa-solid fa-file"></i>
                 <span style={{ marginLeft: "23px" }} className="text">
                   Reports
@@ -589,10 +639,10 @@ function Dashboard() {
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
           <div className="dark-mode-toggle">
-            <i style={{ width: "20px", color: darkMode ? '#fff' : 'inherit' }} className="fa-solid fa-moon"></i>
-            <span style={{ marginLeft: "13px", color: darkMode ? '#fff' : 'inherit' }}>Dark Mode</span>
+            <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
+            <span style={{ marginLeft: "13px" }}>Dark Mode</span>
             <label className="switch">
-              <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
+              <input type="checkbox" />
               <span className="slider"></span>
             </label>
           </div>
@@ -616,12 +666,9 @@ function Dashboard() {
         </div>
 
         <div className="summary-cards">
-          <div className="summary-card income" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="summary-card income">
             <span>Monthly Income</span>
-            <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
+            <h3>
               ₹<AnimatedNumber value={monthTotals.income} />{" "}
               {(() => {
                 const curr = monthTotals.income;
@@ -641,12 +688,9 @@ function Dashboard() {
               })()}
             </h3>
           </div>
-          <div className="summary-card expenses" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="summary-card expenses">
             <span>Monthly Expenses </span>
-            <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
+            <h3>
               ₹<AnimatedNumber value={monthTotals.expenses} />{" "}
               {(() => {
                 const curr = monthTotals.expenses;
@@ -666,12 +710,9 @@ function Dashboard() {
               })()}
             </h3>
           </div>
-          <div className="summary-card tax" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="summary-card tax">
             <span>Estimated Tax Due</span>
-            <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
+            <h3>
               {(() => {
                 const currentTaxData = JSON.parse(localStorage.getItem('taxEstimate') || '{"estimatedTax": 0}');
                 const prevTaxData = JSON.parse(localStorage.getItem('prevTaxEstimate') || '{"estimatedTax": 0}');
@@ -689,28 +730,27 @@ function Dashboard() {
               })()}
             </h3>
           </div>
-          <div className="summary-card savings" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="summary-card savings">
             <span>Savings Rate</span>
-            <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>
+            <h3>
               {(() => {
                 const income = monthTotals.income;
                 const expenses = monthTotals.expenses;
                 const prevIncome = prevMonthTotals.income || 0;
                 const prevExpenses = prevMonthTotals.expenses || 0;
-                
-                // Calculate current and previous savings rates
-                const savings = income - expenses;
-                const prevSavings = prevIncome - prevExpenses;
-                const savingsRate = income > 0 ? (savings / income) * 100 : 0;
-                const prevSavingsRate = prevIncome > 0 ? (prevSavings / prevIncome) * 100 : 0;
-                
-                // Calculate the change in savings rate
-                const rateChange = prevSavingsRate === 0 
-                  ? (savingsRate > 0 ? 100 : 0) 
-                  : ((savingsRate - prevSavingsRate) / Math.abs(prevSavingsRate)) * 100;
+
+                const savings = Math.max(0, income - expenses);
+                const prevSavings = Math.max(0, prevIncome - prevExpenses);
+                const savingsRate = income > 0 ? Math.min(100, Math.max(0, (savings / income) * 100)) : 0;
+                const prevSavingsRate = prevIncome > 0 ? Math.min(100, Math.max(0, (prevSavings / prevIncome) * 100)) : 0;
+
+                let rateChange;
+                if (prevSavingsRate === 0) {
+                  rateChange = savingsRate > 0 ? Math.min(100, savingsRate) : 0;
+                } else {
+                  const change = ((savingsRate - prevSavingsRate) / prevSavingsRate) * 100;
+                  rateChange = Math.min(100, Math.max(-100, change));
+                }
                 
                 const isPositive = rateChange >= 0;
                 
@@ -718,7 +758,7 @@ function Dashboard() {
                   <>
                     {savingsRate.toFixed(1)}%{' '}
                     <span className={isPositive ? 'up' : 'down'}>
-                      {isPositive ? '↑' : '↓'} {Math.abs(rateChange).toFixed(0)}%
+                      {isPositive ? '↑' : '↓'} {Math.min(100, Math.abs(rateChange)).toFixed(0)}%
                     </span>
                   </>
                 );
@@ -728,12 +768,9 @@ function Dashboard() {
         </div>
 
         <div className="charts-row">
-          <div className="income-expense-chart" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="income-expense-chart">
             <div className="chart-header">
-              <span style={{ color: darkMode ? '#fff' : 'inherit' }}>Income vs Expense</span>
+              <span>Income vs Expense</span>
               <select
                 value={chartRange}
                 onChange={(e) => setChartRange(e.target.value)}
@@ -963,12 +1000,9 @@ function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="expense-breakdown" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
+          <div className="expense-breakdown">
             <div className="chart-header">
-              <span style={{ color: darkMode ? '#fff' : 'inherit' }}>Expense Breakdown</span>
+              <span>Expense Breakdown</span>
             </div>
             <div
               className="pie-chart-placeholder"
@@ -1098,12 +1132,9 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="transactions-panel" style={{
-            background: darkMode ? 'rgba(137, 136, 136, 0.37)' : '',
-            color: darkMode ? '#fff' : 'inherit'
-          }}>
-          <h3 style={{ color: darkMode ? '#fff' : 'inherit' }}>Recent Transactions</h3>
-          <table style={{ color: darkMode ? '#fff' : 'inherit' }}>
+        <div className="transactions-panel">
+          <h3>Recent Transactions</h3>
+          <table>
             <thead>
               <tr>
                 <th>Date</th>

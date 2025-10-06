@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import logo from "../img/taxpal1.png";
-import { API_ENDPOINTS } from "./config/api";
+import logo from "../../img/taxpal1.png";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  getUnreadCount,
+  addNotification
+} from "../config/notificationService";
+import { API_ENDPOINTS } from "../config/api";
 const getDueDate = (quarter) => {
   const year = new Date().getFullYear();
   const dueDates = {
@@ -59,13 +65,26 @@ const TaxEstimator = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [user, setUser] = useState(() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  });
+
+  useEffect(() => {
+    setNotifications(getNotifications());
+    setUnreadCount(getUnreadCount());
+  }, []);
   
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'fa-bars' },
     { name: 'Transactions', path: '/transactions', icon: 'fa-check' },
     { name: 'Budget', path: '/budget', icon: 'fa-money-bill' },
     { name: 'Tax Estimator', path: '/tax-estimator', icon: 'fa-money-bill-trend-up' },
-    { name: 'Reports', path: '/reports', icon: 'fa-file' },
+    { name: 'Reports', path: '/report', icon: 'fa-file' },
     { name: 'Settings', path: '/setting-page', icon: 'fa-gear' }
   ];
 
@@ -96,7 +115,6 @@ const TaxEstimator = () => {
 
   const [estimatedTax, setEstimatedTax] = useState(0);
 
-  const [darkMode, setDarkMode] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -122,11 +140,8 @@ const TaxEstimator = () => {
   }, []);
 
   const handleInputChange = (field, value) => {
-    // For numeric fields, validate input
     if (['grossIncome', 'businessExpenses', 'retirementContributions', 'healthInsurance', 'homeOfficeDeduction'].includes(field)) {
-      // Allow only numbers, decimal point, and backspace
       if (!/^\d*\.?\d*$/.test(value) && value !== '') {
-        // If invalid input, don't update the state
         toast.error("Please enter numbers only");
         return;
       }
@@ -186,6 +201,38 @@ const TaxEstimator = () => {
     existingHistory.push(taxData);
     
     localStorage.setItem("taxEstimatesHistory", JSON.stringify(existingHistory));
+
+    if (estimatedTax > 0) {
+      const notificationTitle = `Tax Payment Reminder: ${quarter}`;
+      const notificationMessage = `Your estimated tax payment of ₹${estimatedTax.toLocaleString()} for ${quarter} is due on ${new Date(quarterInfo.dueDate).toLocaleDateString()}. Please ensure timely payment to avoid penalties.`;
+
+      addNotification({
+        title: notificationTitle,
+        message: notificationMessage,
+        type: 'reminder',
+        date: new Date().toISOString()
+      });
+
+      const reminderDate = new Date(quarterInfo.reminderDate);
+      if (reminderDate > new Date()) {
+        addNotification({
+          title: `Upcoming ${quarter} Tax Payment`,
+          message: `Reminder: Your quarterly tax payment of ₹${estimatedTax.toLocaleString()} is due in 2 weeks. Due date: ${new Date(quarterInfo.dueDate).toLocaleDateString()}.`,
+          type: 'reminder',
+          date: reminderDate.toISOString()
+        });
+      }
+
+      const dueDate = new Date(quarterInfo.dueDate);
+      if (dueDate > new Date()) {
+        addNotification({
+          title: `${quarter} Tax Payment Due Today`,
+          message: `Your quarterly tax payment of ₹${estimatedTax.toLocaleString()} is due today. Please ensure to make the payment to avoid any penalties.`,
+          type: 'reminder',
+          date: dueDate.toISOString()
+        });
+      }
+    }
     
     toast.success("Tax calculation complete. Reminders have been scheduled.", {
       position: "top-center",
@@ -197,14 +244,12 @@ const TaxEstimator = () => {
     setLoading(true);
     setError(null);
 
-    // Convert values to numbers for validation
     const grossIncome = parseFloat(formData.grossIncome) || 0;
     const businessExpenses = parseFloat(formData.businessExpenses) || 0;
     const retirementContributions = parseFloat(formData.retirementContributions) || 0;
     const healthInsurance = parseFloat(formData.healthInsurance) || 0;
     const homeOfficeDeduction = parseFloat(formData.homeOfficeDeduction) || 0;
 
-    // Form validation
     if (!formData.grossIncome.trim() || grossIncome === 0) {
       setError("Gross Income must be greater than zero");
       setLoading(false);
@@ -372,105 +417,144 @@ const TaxEstimator = () => {
               )}
             </div>
           </div>
-          <i className="fa fa-bell"></i>
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
-            alt="User Profile"
-            className="avatar"
-          />
-          <button
-            className="logout-btn"
-            onClick={() => {
-              const id = "logoutConfirm";
-              if (toast.isActive(id)) return;
-              toast(
-                ({ closeToast }) => (
+          <div className="notification-container" style={{ position: 'relative' }}>
+            <i 
+              className="fa fa-bell" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setUnreadCount(0);
+                notifications.forEach(n => {
+                  if (!n.read) {
+                    markNotificationAsRead(n.id);
+                  }
+                });
+                setNotifications(getNotifications());
+              }}
+            ></i>
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#f44336',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: '12px',
+              }}>
+                {notifications.length}
+              </span>
+            )}
+            {showNotifications && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                width: '300px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: 'white',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                borderRadius: '8px',
+                zIndex: 1000,
+              }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
+                    No new notifications
+                  </div>
+                ) : (
+                  <div>
+                    {notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '12px',
+                          borderBottom: '1px solid #eee',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                            {notification.title}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#666' }}>
+                            {notification.message}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                            {new Date(notification.date).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="profile-container">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+              alt="User Profile"
+              className="avatar"
+              onClick={() => {
+                setShowProfileMenu(!showProfileMenu);
+                setShowNotifications(false);
+              }}
+            />
+            {showProfileMenu && (
+              <div className="profile-dropdown">
+                <div className="profile-header">
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzBpnouxDuF063trW5gZOyXtyuQaExCQVMYA&s"
+                    alt="Profile"
+                  />
+                  <div className="profile-info">
+                    <h4>{user?.name || 'User'}</h4>
+                    <p>{user?.email || 'user@example.com'}</p>
+                  </div>
+                </div>
+                <div className="profile-menu">
+                  <Link to="/setting-page" className="profile-menu-item">
+                    <i className="fas fa-user"></i>
+                    View Profile
+                  </Link>
                   <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                      alignItems: "center",
-                      textAlign: "center",
-                      marginLeft: "60px",
+                    className="profile-menu-item"
+                    onClick={() => {
+                      const id = "logoutConfirm";
+                      if (toast.isActive(id)) return;
+                      toast(
+                        ({ closeToast }) => (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center", marginLeft: "60px" }}>
+                            <div style={{ fontWeight: 700, color: "#111827" }}>Confirm Logout</div>
+                            <div style={{ color: "#4b5563", fontSize: 14 }}>Are you sure you want to log out?</div>
+                            <div style={{ display: "flex", gap: 10, marginTop: 6, justifyContent: "center" }}>
+                              <button onClick={() => closeToast()} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #d1d5db", background: "#ffffff", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => {
+                                closeToast();
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                toast.info("Logged out successfully", { toastId: "logoutOnce" });
+                                navigate("/");
+                              }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#207ed0", color: "#ffffff", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
+                            </div>
+                          </div>
+                        ),
+                        { toastId: id, position: "top-center", autoClose: false, closeOnClick: false, draggable: false, closeButton: false, hideProgressBar: true, icon: false, style: { width: "360px", margin: "0 auto", textAlign: "center", borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", padding: "16px 20px" } }
+                      );
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: "#111827" }}>
-                      Confirm Logout
-                    </div>
-                    <div style={{ color: "#4b5563", fontSize: 14 }}>
-                      Are you sure you want to log out?
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        marginTop: 6,
-                        justifyContent: "center",
-                      }}
-                    >
-                      <button
-                        onClick={() => {
-                          closeToast();
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: 8,
-                          border: "1px solid #d1d5db",
-                          background: "#ffffff",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          closeToast();
-                          localStorage.removeItem("token");
-                          localStorage.removeItem("user");
-                          toast.info("Logged out successfully", {
-                            toastId: "logoutOnce",
-                          });
-                          navigate("/");
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: 8,
-                          border: "none",
-                          background: "#207ed0",
-                          color: "#ffffff",
-                          cursor: "pointer",
-                          fontWeight: 600,
-                        }}
-                      >
-                        Confirm
-                      </button>
-                    </div>
+                    <i className="fas fa-sign-out-alt"></i>
+                    Logout
                   </div>
-                ),
-                {
-                  toastId: id,
-                  position: "top-center",
-                  autoClose: false,
-                  closeOnClick: false,
-                  draggable: false,
-                  closeButton: false,
-                  hideProgressBar: true,
-                  icon: false,
-                  style: {
-                    width: "360px",
-                    margin: "0 auto",
-                    textAlign: "center",
-                    borderRadius: 12,
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-                    padding: "16px 20px",
-                  },
-                }
-              );
-            }}
-          >
-            Logout
-          </button>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -488,15 +572,13 @@ const TaxEstimator = () => {
                 <span className="text">Dashboard</span>
               </Link>
             </li>
-            <li>
-              <Link to="#">
+            <li className={useLocation().pathname === "/transactions" ? "active" : ""}>
+              <Link to="/transactions">
                 <i className="fa-solid fa-check"></i>
                 <span className="text">Transactions</span>
               </Link>
             </li>
-            <li
-              className={useLocation().pathname === "/budget" ? "active" : ""}
-            >
+            <li>
               <Link to="/budget">
                 <i className="fa-solid fa-money-bill"></i>
                 <span style={{ marginLeft: "16px" }} className="text">
@@ -517,7 +599,7 @@ const TaxEstimator = () => {
               </Link>
             </li>
             <li>
-              <Link to="#">
+              <Link to="/report">
                 <i className="fa-solid fa-file"></i>
                 <span style={{ marginLeft: "23px" }} className="text">
                   Reports
@@ -532,8 +614,19 @@ const TaxEstimator = () => {
             <span style={{ marginLeft: "4px" }}>Settings</span>
           </Link>
           <div className="dark-mode-toggle">
-            <i style={{ width: "20px" }} className="fa-solid fa-moon"></i>
-            <span style={{ marginLeft: "13px" }}>Dark Mode</span>
+            <i
+              style={{
+                width: "20px",
+              }}
+              className="fa-solid fa-moon"
+            ></i>
+            <span
+              style={{
+                marginLeft: "13px",
+              }}
+            >
+              Dark Mode
+            </span>
             <label className="switch">
               <input type="checkbox" />
               <span className="slider"></span>
@@ -1138,7 +1231,8 @@ const TaxEstimator = () => {
 
           {(() => {
             
-            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]");
+            const allEstimates = JSON.parse(localStorage.getItem("taxEstimatesHistory") || "[]")
+              .filter(estimate => estimate.estimatedTax !== 0 && estimate.estimatedTax !== "0");
 
             allEstimates.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
@@ -1239,6 +1333,29 @@ const TaxEstimator = () => {
                                   padding: "4px 8px",
                                   borderRadius: "12px",
                                   fontSize: "12px",
+                                  cursor: event.type === 'payment' ? 'pointer' : 'default'
+                                }}
+                                onClick={() => {
+                                  if (event.type === 'payment') {
+                                    const newTransaction = {
+                                      id: `TXN${Date.now()}`,
+                                      type: `${event.data.quarter} Estimated Tax Payment`,
+                                      amount: -event.data.estimatedTax,
+                                      date: new Date().toLocaleDateString(),
+                                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                      description: `Quarterly tax payment for ${event.data.quarter}`
+                                    };
+                                    const existingTransactions = JSON.parse(localStorage.getItem('taxTransactions') || '[]');
+                                    existingTransactions.push(newTransaction);
+                                    localStorage.setItem('taxTransactions', JSON.stringify(existingTransactions));
+                                    
+                                    toast.success('Tax payment recorded! Redirecting to Transactions', {
+                                      position: 'top-center',
+                                      autoClose: 2000
+                                    });
+                                    
+                                    setTimeout(() => navigate('/transactions'), 1000);
+                                  }
                                 }}
                               >
                                 {event.type === 'reminder' ? 'Reminder' : 'Payment'}
